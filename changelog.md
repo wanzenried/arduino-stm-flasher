@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- XOR Checksum calculator
+- Base send frame function
+- Send command with checksum
+- Send address with checksum
+- Send data with checksum
+- Read data function
+- Wait ACK function
+- This changelog
+- README
 
 ### Changed
 
