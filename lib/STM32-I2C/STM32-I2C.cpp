@@ -99,3 +99,77 @@ int8_t wait_ack(uint8_t addr, uint8_t *resp, unsigned long timeout_ms)
     }
     return -2;
 }
+
+uint8_t ns_write_mem_word(uint8_t addr, uint32_t address, uint8_t *word, uint8_t wordBytes)
+{
+    uint8_t resp = 0x00;
+    if (wordBytes != 16)
+    {
+        return 7;   // too many or too few words in byte
+    }
+
+    send_cmd(addr, 0x32);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send command failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+
+    send_address(addr, address);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send address failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+
+    send_data(addr, word, wordBytes);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send data failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+    
+    return 0;
+}
+
+uint8_t read_mem_word(uint8_t addr, uint32_t address, uint8_t *rx_buf, uint8_t buf_len)
+{
+    uint8_t resp = 0x00;
+    if (buf_len < 16)
+    {
+        return 7;   // buffer too smol
+    }
+
+    send_cmd(addr, 0x11);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send command failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+
+    send_address(addr, address);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send address failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+
+    uint8_t tx_buf[2];
+    tx_buf[0] = 15;         // N-1
+    tx_buf[1] = ~tx_buf[0];
+
+    send_frame(addr, tx_buf, 2);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send read count failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+
+    return read_data(addr, rx_buf, 16);
+}
