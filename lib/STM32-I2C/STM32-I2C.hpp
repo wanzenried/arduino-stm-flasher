@@ -20,3 +20,5 @@ uint8_t read_data(uint8_t addr, uint8_t *rx_buf, uint8_t len);
 int8_t wait_ack(uint8_t addr, uint8_t *resp, unsigned long timeout_ms);
 uint8_t ns_write_mem_word(uint8_t addr, uint32_t address, uint8_t *word, uint8_t wordBytes);
 uint8_t read_mem_word(uint8_t addr, uint32_t address, uint8_t *rx_buf, uint8_t buf_len);
+uint8_t go(uint8_t addr, uint32_t address);
+

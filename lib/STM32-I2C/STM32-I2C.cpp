@@ -173,3 +173,26 @@ uint8_t read_mem_word(uint8_t addr, uint32_t address, uint8_t *rx_buf, uint8_t b
 
     return read_data(addr, rx_buf, 16);
 }
+
+uint8_t go(uint8_t addr, uint32_t address)
+{
+    uint8_t resp = 0x00;
+
+    send_cmd(addr, 0x21);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send command failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+
+    send_address(addr, address);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send address failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+
+    return 0;
+}

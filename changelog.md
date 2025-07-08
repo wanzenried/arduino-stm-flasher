@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wait ACK function
 - Write memory word (16 Bytes)
 - Read memory word (16 Bytes)
+- Go to address (exit bootloader)
 - This changelog
 - README
 
