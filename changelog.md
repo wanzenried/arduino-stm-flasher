@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Send data with checksum
 - Read data function
 - Wait ACK function
+- Write memory word (16 Bytes)
+- Read memory word (16 Bytes)
 - This changelog
 - README
 
