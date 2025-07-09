@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Go to address (exit bootloader)
 - This changelog
 - README
+- Basic binary uploader
 
 ### Changed
 
