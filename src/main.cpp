@@ -9,13 +9,44 @@ uint8_t tx_buf[16];
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+  Serial.begin(115200);
   Wire.begin();
+
+  while(!Serial.available())
+  {
+    delay(10);
+  }
+
+  Serial.println("Clearing flash to store binary");
+  uint16_t binary_sectors = (len / 0x2000) +1;
+
+  Serial.print("Binary is ");
+  Serial.print(len);
+  Serial.print(" Bytes -> ");
+  Serial.print(binary_sectors);
+  Serial.println(" Sectors");
+
+  Serial.println("Erasing");
+
+  if(ns_erase_mem_sector(stm_addr, binary_sectors, 0)!=0)
+  {
+      Serial.println("error");
+      while(true){delay(10);}
+  }
+  
+  /*
+  if(ns_erase_mem_all(stm_addr, 0)!=0)
+  {
+      Serial.println("error");
+      while(true){delay(10);}
+  }
+  */
 
   Serial.println("Trying to write blinky to the STM");
 
   uint16_t fullWords = len / 16;
   uint8_t restBytes = len % 16;
+  
 
   uint32_t curr_data_addr = data_start_addr;
 

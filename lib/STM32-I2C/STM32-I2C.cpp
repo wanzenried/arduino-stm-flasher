@@ -196,3 +196,87 @@ uint8_t go(uint8_t addr, uint32_t address)
 
     return 0;
 }
+
+// Delete up to 8 sectors at a time (N*2 +1 bytes are needed, we only have 32 from Wire.h, and i like my numbers to be base 2)
+uint8_t ns_erase_mem_sector(uint8_t addr, uint16_t sectors, uint16_t start_sector)
+{
+    uint8_t resp = 0x00;
+    uint8_t tx_buf[17];
+
+    if (sectors > 8)
+    {
+        return 7;   // too many bytes
+    }
+    
+    send_cmd(addr, 0x45);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send command failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+    
+    uint16_t N = sectors - 1;
+    tx_buf[0] = (N >> 8) & 0xFF;
+    tx_buf[1] = N & 0xFF;
+    tx_buf[2] = checksum(tx_buf, 2);
+
+    send_frame(addr, tx_buf, 3);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send sector count failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+
+    for (uint16_t i = 0; i < sectors; i++)
+    {
+        uint16_t current_sector = start_sector + i;
+        tx_buf[2*i]     = (current_sector >> 8) & 0xFF;
+        tx_buf[(2*i)+1] = current_sector & 0xFF;
+    }
+    tx_buf[(2*sectors)] = checksum(tx_buf, 2*sectors);
+    
+    send_frame(addr, tx_buf, (2*sectors)+1);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send sectors failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+    return 0;
+}
+
+// Full bank erase:
+// bank = 0 -> global mass erase
+// bank = 1 -> bank1 mass erase
+// bank = 2 -> bank2 mass erase
+uint8_t ns_erase_mem_all(uint8_t addr, uint8_t bank)
+{
+    uint8_t resp = 0x00;
+    uint8_t tx_buf[3];
+
+    tx_buf[0] = 0xFF;
+    if (bank == 0) tx_buf[1] = 0xFF;
+    if (bank == 1) tx_buf[1] = 0xFE;
+    if (bank == 2) tx_buf[1] = 0xFD;
+    tx_buf[2] = checksum(tx_buf, 2);
+
+    send_cmd(addr, 0x45);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send command failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+
+    send_frame(addr, tx_buf, 3);
+    if (wait_ack(addr, &resp, 100) < 0)
+    {
+        Serial.print("send erase failed: ");
+        Serial.println(resp);
+        return 8;   // wait ack failed
+    }
+
+    return 0;
+}

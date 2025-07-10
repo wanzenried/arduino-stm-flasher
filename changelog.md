@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - This changelog
 - README
 - Basic binary uploader
+- erase memory (1-8 sectors)
+- mass erase memory (bank1, bank2 or all)
+- memory dumping program
+- memory clear prgram
 
 ### Changed
 
