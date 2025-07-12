@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "STM32-I2C.hpp"
-#include "bin_file.h"
+#include "blink_binary.h"
 
 const uint8_t stm_addr = 0x57;
 const uint32_t data_start_addr = 0x08000000;
