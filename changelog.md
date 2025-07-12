@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - mass erase memory (bank1, bank2 or all)
 - memory dumping program
 - memory clear prgram
+- binary to header converter
 
 ### Changed
 
