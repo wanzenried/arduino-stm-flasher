@@ -33,16 +33,8 @@ void setup() {
       Serial.println("error");
       while(true){delay(10);}
   }
-  
-  /*
-  if(ns_erase_mem_all(stm_addr, 0)!=0)
-  {
-      Serial.println("error");
-      while(true){delay(10);}
-  }
-  */
 
-  Serial.println("Trying to write blinky to the STM");
+  Serial.println("Writing binary to the STM");
 
   uint16_t fullWords = len / 16;
   uint8_t restBytes = len % 16;

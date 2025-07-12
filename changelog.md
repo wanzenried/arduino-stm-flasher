@@ -8,29 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- XOR Checksum calculator
-- Base send frame function
-- Send command with checksum
-- Send address with checksum
-- Send data with checksum
-- Read data function
-- Wait ACK function
-- Write memory word (16 Bytes)
-- Read memory word (16 Bytes)
-- Go to address (exit bootloader)
-- This changelog
-- README
-- Basic binary uploader
-- erase memory (1-8 sectors)
-- mass erase memory (bank1, bank2 or all)
-- memory dumping program
-- memory clear prgram
-- binary to header converter
+- 
 
 ### Changed
 
 ### Removed
 
-## [0.0.0] - date
+## [0.0.0] - 2025-07-12
 
 ### Added
+
+#### Functions
+- I2C command building blocks using Wire.h
+	- XOR checksum calculator
+	- Send command + checksum
+	- Send address + checksum
+	- Send data + checksum
+	- Read data
+	- Wait for `ACK / NACK`
+- Write word (16 Bytes) to memory
+- Read word from memory
+- Erase sectors from memory (max 8 sectors at a time)
+- Mass erase memory
+- Go to address (Exit bootloader)
+#### Programs
+- Arduino mega binary uploader
+- Arduino mega memory dumper
+- Arduino mega memory eraser
+- Python binary to header converter
