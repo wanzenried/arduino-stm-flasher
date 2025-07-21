@@ -2,7 +2,14 @@
 Have you ever been in the pecculiar situation, where you want to program your STM32xx but the only interface you have left over on your super awesome pcb is the I2C pins?  
 Me neither, but i still created this tool, to allow you, me and everyone to flash their STM32xx with nothing but an Arduino mega and their computer.
 
-The aim of this project is to make a tool to easily flash STM32xx microprocessors over I2C with the Arduino.
+The aim of this project is to make a tool to easily flash STM32xx microprocessors over I2C with the Arduino, as well as making porting the code to another architecture (STM32xx probably) as easy as possible.  
+While doing this, i will hopefully become better at and/or learn about:
+- Writing classes
+- Virtual functions
+- Abstract and interface classes
+- I2C communication
+- UART communication
+- Python stuffs
 
 ## How does it work?
 Well I'm glad you asked:
