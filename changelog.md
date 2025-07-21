@@ -8,9 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- 
+- Generic UART interface
+- Arduino specific UART implementation
+- Generic I2C interface
+- Arduino specific I2C implementation
 
 ### Changed
+- Updated readme to reflect what i want to learn from this project
 
 ### Removed
 
