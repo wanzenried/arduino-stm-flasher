@@ -9,7 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Generic UART interface
+	- Pure virtual interface
+	- UART interface functions
+		- `bool begin(uint64_t baud)` - Start UART at specified baud rate
+		- `bool write(uint8_t byte)` - Write single byte and return success
+		- `size_t writeBytes(const uint8_t *bytes, size_t len)` - Write multiple bytes
+		- `size_t available(void)` - Number of bytes available to read
+		- `int16_t read(void)` - Read single byte, returns -1 if none
+		- `size_t readBytes(uint8_t *buffer, size_t len)` - Read multible bytes into buffer
 - Arduino specific UART implementation
+	- Uses `HardwareSerial.h`
 - Generic I2C interface
 	- Pure virtual interface intended to be used in Controller mode only
 	- Default I2C timeout = 25ms, stored in protected member `_timeout`
@@ -27,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 		- `int16_t read(void)` - Read single byte, returns -1 if none
 		- `size_t readBytes(uint8_t *buffer, size_t len)` - Read multible bytes into buffer
 - Arduino specific I2C implementation
+	- Uses `Wire.h`
 	- Maximum timeout = 4294967 ms (Wire.h expects timeout in us)
 	- `requestFrom` is clamped to 32 bytes by Wire.h
 
