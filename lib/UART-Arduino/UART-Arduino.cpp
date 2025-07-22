@@ -7,11 +7,6 @@ bool UART_Arduino::begin(unsigned long baud)
     return true;
 }
 
-size_t UART_Arduino::println(const char c[])
-{
-    return _serial.println(c);
-}
-
 bool UART_Arduino::write(uint8_t byte)
 {
     _serial.write(byte);    // this function always returns 1.. eventually...

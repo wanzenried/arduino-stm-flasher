@@ -11,12 +11,11 @@ private:
 public:
     UART_Arduino(HardwareSerial& serial) : _serial(serial) {}
 
-    bool begin(unsigned long baud);
-    size_t println(const char[]);
-    bool write(uint8_t byte);
-    size_t writeBytes(const uint8_t *bytes, size_t len);
-    size_t available(void);
-    int16_t read(void);
-    size_t readBytes(uint8_t *buffer, size_t len);
+    bool begin(unsigned long baud) override;
+    bool write(uint8_t byte) override;
+    size_t writeBytes(const uint8_t *bytes, size_t len) override;
+    size_t available(void) override;
+    int16_t read(void) override;
+    size_t readBytes(uint8_t *buffer, size_t len) override;
 
 };
