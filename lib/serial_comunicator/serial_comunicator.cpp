@@ -2,5 +2,5 @@
 
 void serial_comunicator::foo()
 {
-    _uart.writeBytes("hello world", 12);
+    _uart.writeBytes("hello world\n", 13);
 }

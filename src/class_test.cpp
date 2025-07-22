@@ -10,7 +10,7 @@ void setup()
 {
     mySerial.begin(115200);
     delay(200);
-    mySerial.println("hello world");
+    mySerial.writeBytes("hello world\n", 13);
     delay(200);
     comm.foo();
 
