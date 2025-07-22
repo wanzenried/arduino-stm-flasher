@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 	- UART interface functions
 		- `bool begin(uint64_t baud)` - Start UART at specified baud rate
 		- `bool write(uint8_t byte)` - Write single byte and return success
-		- `size_t writeBytes(const uint8_t *bytes, size_t len)` - Write multiple bytes
+		- `size_t writeBytes(const uint8_t *bytes, size_t len)` - Write multible bytes
 		- `size_t available(void)` - Number of bytes available to read
 		- `int16_t read(void)` - Read single byte, returns -1 if none
 		- `size_t readBytes(uint8_t *buffer, size_t len)` - Read multible bytes into buffer
@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 		- `bool beginTransmission(uint8_t I2C_addr)` - Begin transmission to peripheral
 		- `bool endTransmission(void)` - End transmission and return success
 		- `bool write(uint8_t byte)` - Write single byte and return success
-		- `size_t writeBytes(const uint8_t *bytes, size_t len)` - Write multiple bytes
+		- `size_t writeBytes(const uint8_t *bytes, size_t len)` - Write multible bytes
 		- `size_t available(void)` - Number of bytes available to read
 		- `size_t requestFrom(uint8_t I2C_addr, size_t amount)` - Request bytes from peripheral
 		- `int16_t read(void)` - Read single byte, returns -1 if none
