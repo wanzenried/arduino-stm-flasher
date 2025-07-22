@@ -1,9 +1,30 @@
 #include "I2C-Arduino.hpp"
 
+I2C_Arduino::I2C_Arduino(TwoWire& wire)
+    : _wire(wire)
+{
+    _wire.setWireTimeout(_timeout*1000, true);
+}
+
 bool I2C_Arduino::begin(void)
 {
     _wire.begin();
     return true;
+}
+
+// timeout will be clamped to 4294967ms
+// to avoid overflow when converting to us
+// also automatically reset in timeout
+void I2C_Arduino::setTimeout(uint32_t timeout)
+{
+    if (timeout > 4294967U) timeout = 4294967U;
+    I2C_Interface::setTimeout(timeout);
+    _wire.setWireTimeout(timeout*1000, true);
+}
+
+uint32_t I2C_Arduino::getTimeout(void) const
+{
+    return I2C_Interface::getTimeout();
 }
 
 bool I2C_Arduino::beginTransmission(uint8_t I2C_addr)
@@ -41,9 +62,11 @@ size_t I2C_Arduino::available(void)
     return (n < 0) ? 0 : (size_t)n;
 }
 
-uint8_t I2C_Arduino::requestFrom(uint8_t I2C_addr, uint8_t amount)
+// Wire.h can't request more than 32 bytes at a time, so I'll clamp the value here
+size_t I2C_Arduino::requestFrom(uint8_t I2C_addr, size_t amount)
 {
-    return _wire.requestFrom(I2C_addr, amount);
+    if (amount > 32) amount = 32;
+    return _wire.requestFrom(I2C_addr, (uint8_t)amount);
 }
 
 int16_t I2C_Arduino::read(void)
