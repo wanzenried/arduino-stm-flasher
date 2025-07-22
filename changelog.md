@@ -11,7 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Generic UART interface
 - Arduino specific UART implementation
 - Generic I2C interface
+	- Pure virtual interface intended to be used in Controller mode only
+	- Default I2C timeout = 25ms, stored in protected member `_timeout`
+	- Timeout functions:
+		- `void setTimeout(uint32_t timeout)` - Set timeout in milliseconds
+    	- `uint32_t getTimeout(void) const` - Returns current timeout
+	- I2C interface functions:
+		- `bool begin(void)` - Start I2C in Controller mode
+		- `bool beginTransmission(uint8_t I2C_addr)` - Begin transmission to peripheral
+		- `bool endTransmission(void)` - End transmission and return success
+		- `bool write(uint8_t byte)` - Write single byte and return success
+		- `size_t writeBytes(const uint8_t *bytes, size_t len)` - Write multiple bytes
+		- `size_t available(void)` - Number of bytes available to read
+		- `size_t requestFrom(uint8_t I2C_addr, size_t amount)` - Request bytes from peripheral
+		- `int16_t read(void)` - Read single byte, returns -1 if none
+		- `size_t readBytes(uint8_t *buffer, size_t len)` - Read multible bytes into buffer
 - Arduino specific I2C implementation
+	- Maximum timeout = 4294967 ms (Wire.h expects timeout in us)
+	- `requestFrom` is clamped to 32 bytes by Wire.h
 
 ### Changed
 - Updated readme to reflect what i want to learn from this project
