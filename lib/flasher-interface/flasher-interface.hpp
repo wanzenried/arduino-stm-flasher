@@ -22,6 +22,8 @@ private:
     size_t buf_size;
 
     // pointer to member function that takes no arguments and is of return type void
+    // use: command_handler ptr = &flasher_instance::function
+    // can then be called with: (instance.*ptr) (); or (this->*ptr) ();
     typedef void (flasher_interface::*command_handler)();
 
     struct command_entry{

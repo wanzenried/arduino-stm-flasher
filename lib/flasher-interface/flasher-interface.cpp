@@ -1,5 +1,6 @@
 #include "flasher-interface.hpp"
 
+// Array of pointers to class functions and their "command"
 const flasher_interface::command_entry flasher_interface::command_table[] = {
     {0x01, &flasher_interface::get_version},
     {0x08, &flasher_interface::get_valid_commands},
