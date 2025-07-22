@@ -16,11 +16,13 @@ void setup()
 
 void loop()
 {
-    delay(500);
-    interface.get_version();
-    delay(200);
-    interface.get_valid_commands();
-    delay(200);
-    interface.get_buf_size();
+    for (size_t i = 0; i < 0x20; i++)
+    {
+        uart.write(i);
+        interface.command_selector(i);
+        delay(100);
+    }
+    delay(2000);
+    
 
 }

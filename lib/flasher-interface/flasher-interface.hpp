@@ -30,11 +30,13 @@ private:
     };
 
     static const command_entry command_table[];
-    static constexpr size_t command_count = 3;  // this will have to be updated manually
+    static constexpr uint8_t command_count = 3;  // this will have to be updated manually
 
     //versioning:
     static constexpr uint8_t VERSION_MAJOR = 0;
     static constexpr uint8_t VERSION_MINOR = 1;
+
+    void handle_command(uint8_t index);
 
 
 public:
@@ -43,7 +45,7 @@ public:
     //void clear_data_buf();
 
     //uint8_t recieve_command();
-    //void command_selector();
+    void command_selector(uint8_t cmd);
 
     // host commands
 
