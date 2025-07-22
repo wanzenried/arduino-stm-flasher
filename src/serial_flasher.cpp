@@ -1,26 +1,26 @@
 #include <Arduino.h>
-#include "STM32-I2C.hpp"
-#include "serial-interface.hpp"
 
-uint8_t cmd = 0x00;
+#include "UART-Arduino.hpp"
+#include "flasher-interface.hpp"
+
+uint8_t buffer[50];
+size_t buf_len = 50;
+
+UART_Arduino uart(Serial);
+flasher_interface interface(uart, buffer, buf_len);
 
 void setup()
 {
-    Serial.begin(115200);
-    Wire.begin();
+    uart.begin(112500);
 }
 
 void loop()
 {
-    uint8_t resp = getcommand(&cmd);
-    if ( resp== 0)
-    {
-        commandselector(cmd);
-    }
-    else if(resp == 2)
-    {
-        Serial.write(NACK);
-        empty_serial_input();
-    }
-    delay(1);
+    delay(500);
+    interface.get_version();
+    delay(200);
+    interface.get_valid_commands();
+    delay(200);
+    interface.get_buf_size();
+
 }
