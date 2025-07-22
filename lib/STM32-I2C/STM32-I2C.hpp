@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <Wire.h>
+#include "I2C-Interface.hpp"
 
 // This library implements I2C protocols to communicate with the STM32 bootloader as described in AN4221
 
@@ -10,6 +10,8 @@
 #define ACK     0x79
 #define NACK    0x1F
 #define BUSY    0x76
+
+void init_i2c_interface(I2C_Interface* interface);
 
 uint8_t send_frame(uint8_t addr, uint8_t *tx_buf, uint8_t length);
 uint8_t send_cmd(uint8_t addr, uint8_t cmd);
