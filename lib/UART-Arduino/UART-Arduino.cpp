@@ -1,10 +1,27 @@
 
 #include "UART-Arduino.hpp"
 
+UART_Arduino::UART_Arduino(HardwareSerial& serial)
+    : _serial(serial)
+{
+    _serial.setTimeout(_timeout);
+}
+
 bool UART_Arduino::begin(uint64_t baud)
 {
     _serial.begin(baud);
     return true;
+}
+
+void UART_Arduino::setTimeout(uint64_t timeout)
+{
+    UART_Interface::setTimeout(timeout);
+    _serial.setTimeout(timeout);
+}
+
+uint64_t UART_Arduino::getTimeout(void) const
+{
+    return UART_Interface::getTimeout();
 }
 
 bool UART_Arduino::write(uint8_t byte)

@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Generic UART interface
 	- Pure virtual interface
+	- Default UART timeout = 1000ms, stored in protected member `_timeout`
+	- Timeout functions:
+		- `void setTimeout(uint64_t timeout)` - Set timeout in milliseconds
+    	- `uint64_t getTimeout(void) const` - Returns current timeout
 	- UART interface functions
 		- `bool begin(uint64_t baud)` - Start UART at specified baud rate
 		- `bool write(uint8_t byte)` - Write single byte and return success
