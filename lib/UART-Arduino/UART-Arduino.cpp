@@ -1,7 +1,7 @@
 
 #include "UART-Arduino.hpp"
 
-bool UART_Arduino::begin(unsigned long baud)
+bool UART_Arduino::begin(uint64_t baud)
 {
     _serial.begin(baud);
     return true;

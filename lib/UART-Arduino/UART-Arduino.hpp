@@ -11,7 +11,7 @@ private:
 public:
     UART_Arduino(HardwareSerial& serial) : _serial(serial) {}
 
-    bool begin(unsigned long baud) override;
+    bool begin(uint64_t baud) override;
     bool write(uint8_t byte) override;
     size_t writeBytes(const uint8_t *bytes, size_t len) override;
     size_t available(void) override;
