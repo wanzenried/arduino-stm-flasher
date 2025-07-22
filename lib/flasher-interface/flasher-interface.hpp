@@ -19,7 +19,7 @@ class flasher_interface
 private:
     UART_Interface& UART;
     uint8_t* data_buf;
-    size_t buf_size;
+    uint16_t buf_size;
 
     // pointer to member function that takes no arguments and is of return type void
     // use: command_handler ptr = &flasher_instance::function
@@ -42,7 +42,7 @@ private:
 
 
 public:
-    flasher_interface(UART_Interface& UART, uint8_t* buffer, size_t size);
+    flasher_interface(UART_Interface& UART, uint8_t* buffer, uint16_t size);
 
     //void clear_data_buf();
 

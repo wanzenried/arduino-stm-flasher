@@ -9,7 +9,7 @@ const flasher_interface::command_entry flasher_interface::command_table[] = {
 };
 
 
-flasher_interface::flasher_interface(UART_Interface& UART, uint8_t* buffer, size_t size)
+flasher_interface::flasher_interface(UART_Interface& UART, uint8_t* buffer, uint16_t size)
     : UART(UART), data_buf(buffer), buf_size(size)
 {
 
@@ -52,8 +52,9 @@ void flasher_interface::get_valid_commands()
     }
 }
 
+// Return max length of data buffer (2 bytes)
 void flasher_interface::get_buf_size()
 {
-    UART.write((uint8_t)buf_size);
-
+    UART.write((uint8_t)((buf_size >> 8) & 0xFF));
+    UART.write((uint8_t)(buf_size & 0xFF));
 }

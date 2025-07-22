@@ -3,8 +3,8 @@
 #include "UART-Arduino.hpp"
 #include "flasher-interface.hpp"
 
-uint8_t buffer[50];
-size_t buf_len = 50;
+uint8_t buffer[0x1000];
+size_t buf_len = 0x1000;
 
 UART_Arduino uart(Serial);
 flasher_interface interface(uart, buffer, buf_len);
