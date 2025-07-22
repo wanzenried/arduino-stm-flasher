@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Updated readme to reflect what i want to learn from this project
+- `STM32-I2C.cpp` no longer uses Wire.h, I2C interface is used instead
+- Example programs updated to use arduino interface instead of Wire.h:
+	- Arduino mega binary uploader (`main.cpp`)
+	- Arduino mega memory dumper (`mem_dump.cpp`)
+	- Arduino mega memory eraser (`clear_mem.cpp`)
 
 ### Removed
 
