@@ -4,7 +4,11 @@
 const flasher_interface::command_entry flasher_interface::command_table[] = {
     {0x01, &flasher_interface::get_version},
     {0x08, &flasher_interface::get_valid_commands},
-    {0x10, &flasher_interface::get_buf_size}
+    {0x10, &flasher_interface::get_buf_size},
+    {0x11, &flasher_interface::clear_buf},
+    {0x12, &flasher_interface::write_buf},
+    {0x13, &flasher_interface::get_buf}
+
 
 };
 
@@ -82,4 +86,26 @@ void flasher_interface::get_buf_size()
 {
     UART.write((uint8_t)((buf_size >> 8) & 0xFF));
     UART.write((uint8_t)(buf_size & 0xFF));
+}
+
+void flasher_interface::clear_buf()
+{
+    //todo
+    //reset buffer to fixed value
+}
+
+void flasher_interface::write_buf()
+{
+    //todo
+    // 1. get where to write + checksum
+    // 2. get amount of bytes + checksum
+    // 3. check if out of bounds write
+    // 4. read bytes in chunks (16 or 32) + checksum
+}
+
+void flasher_interface::get_buf()
+{
+    //todo
+    //return all of data_buf
+    //send bytes in chunks (16 or 32) + checksum
 }

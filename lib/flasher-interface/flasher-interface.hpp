@@ -32,7 +32,7 @@ private:
     };
 
     static const command_entry command_table[];
-    static constexpr uint8_t command_count = 3;  // this will have to be updated manually
+    static constexpr uint8_t command_count = 6;  //! this will have to be updated manually
 
     //versioning:
     static constexpr uint8_t VERSION_MAJOR = 0;
@@ -44,8 +44,6 @@ private:
 public:
     flasher_interface(UART_Interface& UART, uint8_t* buffer, uint16_t size);
 
-    //void clear_data_buf();
-
     int16_t recieve_command();
     void command_selector(uint8_t cmd);
 
@@ -54,5 +52,10 @@ public:
     void get_version();
     void get_valid_commands();
     void get_buf_size();
+    // todo
+    void clear_buf();
+    void write_buf();
+    void get_buf();
+
 };
 
