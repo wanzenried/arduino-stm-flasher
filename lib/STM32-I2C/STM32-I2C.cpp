@@ -1,13 +1,19 @@
 #include "STM32-I2C.hpp"
+static I2C_Interface* i2c = nullptr;
+
+void init_i2c_interface(I2C_Interface* interface)
+{
+    i2c = interface;
+}
 
 uint8_t send_frame(uint8_t addr, uint8_t *tx_buf, uint8_t length)
 {
-    Wire.beginTransmission(addr);
+    i2c->beginTransmission(addr);
     for (uint8_t i = 0; i < length; i++)
     {
-        Wire.write(tx_buf[i]);
+        i2c->write(tx_buf[i]);
     }
-    return Wire.endTransmission();
+    return i2c->endTransmission();
 }
 
 uint8_t send_cmd(uint8_t addr, uint8_t cmd)
@@ -60,8 +66,8 @@ uint8_t send_data(uint8_t addr, uint8_t *data, uint8_t len)
 
 uint8_t read_data(uint8_t addr, uint8_t *rx_buf, uint8_t len)
 {
-    Wire.requestFrom(addr, len);
-    return Wire.readBytes(rx_buf, len);
+    i2c->requestFrom(addr, len);
+    return i2c->readBytes(rx_buf, len);
 }
 
 // wait for an ACK byte
@@ -78,14 +84,14 @@ int8_t wait_ack(uint8_t addr, uint8_t *resp, unsigned long timeout_ms)
 
     while(millis() - start < timeout_ms)
     {
-        Wire.requestFrom(addr, 1);
-        if (!Wire.available())
+        i2c->requestFrom(addr, 1);
+        if (!i2c->available())
         {
             delay(1);
             continue;
         }
 
-        res = Wire.read();
+        res = i2c->read();
 
         if (res == ACK) return saw_busy ? 1 : 0;
         if (res == NACK) return -1;
