@@ -10,7 +10,7 @@
 
 #include "UART-Interface.hpp"
 
-
+uint8_t cmd_checksum (uint8_t cmd);
 
 
 
@@ -46,7 +46,7 @@ public:
 
     //void clear_data_buf();
 
-    //uint8_t recieve_command();
+    int16_t recieve_command();
     void command_selector(uint8_t cmd);
 
     // host commands

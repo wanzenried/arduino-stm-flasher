@@ -8,11 +8,36 @@ const flasher_interface::command_entry flasher_interface::command_table[] = {
 
 };
 
+// command checksum is just bitwise not of command
+// ex: cmd: 0xF0 -> checksum: 0x0F
+uint8_t cmd_checksum(uint8_t cmd)
+{
+    return ~cmd;
+}
+
 
 flasher_interface::flasher_interface(UART_Interface& UART, uint8_t* buffer, uint16_t size)
     : UART(UART), data_buf(buffer), buf_size(size)
 {
 
+}
+
+int16_t flasher_interface::recieve_command()
+{
+    uint8_t rx_buf[2];
+
+    if (UART.available() < 2)
+    {
+        return -1;  // not enough data in buffer
+    }
+    UART.readBytes(rx_buf, 2);
+
+    if (rx_buf[0] != cmd_checksum(rx_buf[1]))
+    {
+        UART.write(0x1F);   //NACK
+        return -2;  // checksum mismatch
+    }
+    return rx_buf[0];
 }
 
 void flasher_interface::command_selector(uint8_t cmd)
@@ -21,14 +46,14 @@ void flasher_interface::command_selector(uint8_t cmd)
     {
         if (cmd == command_table[i].cmd)
         {
-            UART.write(0xDD);
+            UART.write(0x79);   //ACK
             handle_command(i);
             return;
         }
         
     }
     // cmd not found
-    UART.write(0xFF); //NACK
+    UART.write(0x1F); //NACK
 }
 
 void flasher_interface::handle_command(uint8_t index)

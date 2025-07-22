@@ -4,25 +4,29 @@
 #include "flasher-interface.hpp"
 
 uint8_t buffer[0x1000];
-size_t buf_len = 0x1000;
+uint16_t buf_len = 0x1000;
 
 UART_Arduino uart(Serial);
 flasher_interface interface(uart, buffer, buf_len);
 
+int16_t cmd;
+
 void setup()
 {
-    uart.begin(112500);
+    // Ran into weird issues at baud = 115200. need to investigate further
+    uart.begin(19200);
 }
 
 void loop()
 {
-    for (size_t i = 0; i < 0x20; i++)
+    cmd = interface.recieve_command();
+
+    if (cmd >= 0)
     {
-        uart.write(i);
-        interface.command_selector(i);
-        delay(100);
+        interface.command_selector(uint8_t(cmd));
     }
-    delay(2000);
+
+    delay(100);
     
 
 }
