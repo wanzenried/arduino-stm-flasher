@@ -56,7 +56,7 @@ int16_t flasher_interface::recieve_command()
 
     if (rx_buf[0] != cmd_checksum(rx_buf[1]))
     {
-        UART.write(0x1F);   //NACK
+        UART.write(NACK);
         return -2;  // checksum mismatch
     }
     return rx_buf[0];
@@ -68,14 +68,13 @@ void flasher_interface::command_selector(uint8_t cmd)
     {
         if (cmd == command_table[i].cmd)
         {
-            UART.write(0x79);   //ACK
+            UART.write(ACK);
             handle_command(i);
             return;
         }
         
     }
-    // cmd not found
-    UART.write(0x1F); //NACK
+    UART.write(NACK);   // cmd not found
 }
 
 void flasher_interface::handle_command(uint8_t index)
