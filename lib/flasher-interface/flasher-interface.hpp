@@ -11,6 +11,8 @@
 #include "UART-Interface.hpp"
 
 uint8_t cmd_checksum (uint8_t cmd);
+uint8_t bytes_checksum(uint8_t* bytes, size_t amount);
+void running_checksum(uint8_t* checksum, uint8_t byte);
 
 
 
@@ -53,9 +55,9 @@ public:
     void get_valid_commands();
     void get_buf_size();
     void clear_buf();
+    void get_buf();
     // todo
     void write_buf();
-    void get_buf();
 
 };
 

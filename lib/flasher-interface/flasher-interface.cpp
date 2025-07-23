@@ -1,5 +1,10 @@
 #include "flasher-interface.hpp"
 
+
+#define ACK 0x79
+#define NACK 0x1F
+#define BUSY 0x76
+
 // Array of pointers to class functions and their "command"
 const flasher_interface::command_entry flasher_interface::command_table[] = {
     {0x01, &flasher_interface::get_version},
@@ -17,6 +22,21 @@ const flasher_interface::command_entry flasher_interface::command_table[] = {
 uint8_t cmd_checksum(uint8_t cmd)
 {
     return ~cmd;
+}
+
+uint8_t bytes_checksum(uint8_t* bytes, size_t amount)
+{
+    uint8_t sum = 0x00;
+    for (size_t i = 0; i < amount; i++)
+    {
+        sum ^= bytes[i];
+    }
+    return sum;
+}
+
+void running_checksum(uint8_t* checksum, uint8_t byte)
+{
+    *checksum ^= byte;
 }
 
 
@@ -106,9 +126,84 @@ void flasher_interface::write_buf()
     // 4. read bytes in chunks (16 or 32) + checksum
 }
 
+// Get N + 1 bytes from data_buf (N is 1 byte)
+// called like this:
+// 0x13 0xEC HI LO chksum N chksum
+//  ^    ^     ^     ^    ^    ^
+// cmd   |   index   | bytes-1 |
+//  cmd checksum     |      N xor 0xFF
+//               HI xor LO
 void flasher_interface::get_buf()
 {
-    //todo
-    //return all of data_buf
-    //send bytes in chunks (16 or 32) + checksum
+    uint8_t rx_buf[3];
+    uint8_t checksum = 0x00;
+    size_t bytesRead;
+    uint16_t buf_index = 0;
+    uint16_t bytes_to_read = 0;
+
+    // 1. where do you want bytes from? (2 bytes) + checksum (xor of bytes)
+    bytesRead = UART.readBytes(rx_buf, 3);
+
+    if (bytesRead != 3)
+    {
+        UART.write(NACK);   // read timed out
+        return;
+    }
+    if (bytes_checksum(rx_buf, 2) != rx_buf[2])
+    {
+        UART.write(NACK);   // wrong checksum
+        return;
+    }
+    buf_index = rx_buf[0] << 8;
+    buf_index |= rx_buf[1];
+
+    // 2. is it in range? (ack/nack)
+    if (buf_index >= buf_size)
+    {
+        UART.write(NACK);   // out of bounds
+        return;
+    }
+    UART.write(ACK);
+    
+    // 3. how many bytes to you want? (1 byte) + checksum (byte xor 0xFF)
+    bytesRead = UART.readBytes(rx_buf, 2);
+
+    if (bytesRead != 2)
+    {
+        UART.write(NACK);   // read timed out
+        return;
+    }
+
+    checksum = 0xFF;
+    running_checksum(&checksum, rx_buf[0]);
+    if (checksum != rx_buf[1])
+    {
+        UART.write(NACK);   // wrong checksum
+        return;
+    }
+    bytes_to_read = rx_buf[0] + 1;  // we want to read 1 - 256 bytes
+    
+    // 4. are they all in range? (ack/nack)
+    uint16_t last_index = buf_index + bytes_to_read;
+
+    if (last_index >= buf_size || last_index < buf_index)
+    {
+        UART.write(NACK);   // index out of bounds, or overflowed
+        return;
+    }
+    UART.write(ACK);
+    
+    // 5. Send bytes
+    checksum = 0x00;
+    while (bytes_to_read > 0)
+    {
+        running_checksum(&checksum, data_buf[buf_index]);
+        UART.write(data_buf[buf_index]);
+        buf_index++;
+        bytes_to_read--;
+    }
+    
+    // 6. Send checksum (xor of all bytes sent)
+    UART.write(checksum);
+
 }
