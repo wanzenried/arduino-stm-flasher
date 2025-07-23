@@ -88,10 +88,13 @@ void flasher_interface::get_buf_size()
     UART.write((uint8_t)(buf_size & 0xFF));
 }
 
+// Reset buffer to all 0xFF (this is standard reset value on the STM32, so i will also use it here)
 void flasher_interface::clear_buf()
 {
-    //todo
-    //reset buffer to fixed value
+    for (uint16_t i = 0; i < buf_size; i++)
+    {
+        data_buf[i] = 0xFF;
+    }
 }
 
 void flasher_interface::write_buf()

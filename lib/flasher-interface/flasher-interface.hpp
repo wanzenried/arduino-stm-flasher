@@ -52,8 +52,8 @@ public:
     void get_version();
     void get_valid_commands();
     void get_buf_size();
-    // todo
     void clear_buf();
+    // todo
     void write_buf();
     void get_buf();
 
