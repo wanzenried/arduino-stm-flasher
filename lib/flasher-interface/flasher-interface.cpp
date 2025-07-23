@@ -90,8 +90,10 @@ void flasher_interface::get_version()
     UART.write(VERSION_MINOR);
 }
 
+// Return count of valid commands (1 byte), then list of commands
 void flasher_interface::get_valid_commands()
 {
+    UART.write(command_count);
     for (size_t i = 0; i < command_count; i++)
     {
         UART.write(command_table[i].cmd);
