@@ -1,21 +1,8 @@
 #include "flasher-interface.hpp"
 
-
 #define ACK 0x79
 #define NACK 0x1F
 #define BUSY 0x76
-
-// Array of pointers to class functions and their "command"
-const flasher_interface::command_entry flasher_interface::command_table[] = {
-    {0x01, &flasher_interface::get_version},
-    {0x08, &flasher_interface::get_valid_commands},
-    {0x10, &flasher_interface::get_buf_size},
-    {0x11, &flasher_interface::clear_buf},
-    {0x12, &flasher_interface::write_buf},
-    {0x13, &flasher_interface::get_buf}
-
-
-};
 
 // command checksum is just bitwise not of command
 // ex: cmd: 0xF0 -> checksum: 0x0F
@@ -39,6 +26,17 @@ void running_checksum(uint8_t* checksum, uint8_t byte)
     *checksum ^= byte;
 }
 
+// Array of pointers to class functions and their "command"
+const flasher_interface::command_entry flasher_interface::command_table[] = {
+    {0x01, &flasher_interface::get_version},
+    {0x08, &flasher_interface::get_valid_commands},
+    {0x10, &flasher_interface::get_buf_size},
+    {0x11, &flasher_interface::clear_buf},
+    {0x12, &flasher_interface::write_buf},
+    {0x13, &flasher_interface::get_buf}
+
+
+};
 
 flasher_interface::flasher_interface(UART_Interface& UART, uint8_t* buffer, uint16_t size)
     : UART(UART), data_buf(buffer), buf_size(size)
