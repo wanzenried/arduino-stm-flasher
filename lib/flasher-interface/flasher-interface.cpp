@@ -116,6 +116,12 @@ void flasher_interface::clear_buf()
     }
 }
 
+// Write N + 1 bytes to data_buf (N is 1 byte)
+// called like this:
+// 0x12 0xED (wait for ACK) HI LO chksum (wait for ACK) N chksum (wait for ACK) bytes chksum
+//  ^    ^                    ^     ^                   ^    ^                    ^     ^
+// cmd   |                  index   |                bytes-1 |                N+1 bytes |
+//  cmd checksum                HI xor LO                 N xor 0xFF            xor of all bytes sent
 void flasher_interface::write_buf()
 {
     uint8_t rx_buf[3];
@@ -123,7 +129,6 @@ void flasher_interface::write_buf()
     size_t bytesRead;
     uint16_t buf_index = 0;
     uint16_t bytes_to_write = 0;
-
 
     // 1. get where to write to (2 bytes) + checksum (xor of bytes)
     bytesRead = UART.readBytes(rx_buf, 3);
@@ -207,11 +212,10 @@ void flasher_interface::write_buf()
 
 // Get N + 1 bytes from data_buf (N is 1 byte)
 // called like this:
-// 0x13 0xEC HI LO chksum N chksum
-//  ^    ^     ^     ^    ^    ^
-// cmd   |   index   | bytes-1 |
-//  cmd checksum     |      N xor 0xFF
-//               HI xor LO
+// 0x13 0xEC (wait for ACK) HI LO chksum (wait for ACK) N chksum
+//  ^    ^                    ^     ^                   ^    ^
+// cmd   |                  index   |                bytes-1 |
+//  cmd checksum                HI xor LO                 N xor 0xFF
 void flasher_interface::get_buf()
 {
     uint8_t rx_buf[3];
