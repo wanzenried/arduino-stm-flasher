@@ -175,3 +175,56 @@ int8_t STM32Bootloader::read_mem_word(uint32_t address, uint8_t* rx_buf, size_t 
 
     return 0;
 }
+
+// Erase flash on STM. Uses No-Stretch Erase Memory cmd (0x45)
+// bank = 0x00 -> sector erase      (len < 16, because of Wire.h)
+// bank = 0xFF -> global mass erase (len and sectors ignored)
+// bank = 0xFE -> bank1 mass erase  (len and sectors ignored)
+// bank = 0xFD -> bank2 mass erase  (len and sectors ignored)
+int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
+{
+    uint8_t resp = 0x00;
+    
+    send_cmd(0x45);
+    if (wait_ack(&resp, 100) < 0)
+    {
+        return -2;  // cmd not acknowledge
+    }
+
+    if (bank > 0xFC)
+    {
+        _tx_buf[0] = 0xFF;
+        _tx_buf[1] = bank;
+    }
+    else
+    {
+        if (len > 15 || len == 0)
+        {
+            return -1;  // wrong size buffer
+        }
+        _tx_buf[0] = 0x00;
+        _tx_buf[1] = (uint8_t)len;
+    }
+    _tx_buf[2] = bytes_checksum(_tx_buf, 2);
+    send_frame(_tx_buf, 3);
+    
+    if (bank < 0xFD)
+    {
+        if (wait_ack(&resp, 100) < 0)
+        {
+            return -3;  // sector count checksum not acknowledge
+        }
+        for (size_t i = 0; i < len; i++)
+        {
+            _tx_buf[i*2] = (sectors[i] >> 8) & 0xFF;
+            _tx_buf[(i*2)+1] = sectors[i] & 0xFF;
+        }
+        _tx_buf[2*len] = bytes_checksum(_tx_buf, 2*len);
+        send_frame(_tx_buf, (2*len)+1);
+    }
+    if (wait_ack(&resp, 100) < 0)
+    {
+        return -4;  // sector erase not acknowledge
+    }
+    return 0;
+}

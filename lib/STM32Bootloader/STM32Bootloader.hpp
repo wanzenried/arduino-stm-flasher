@@ -29,6 +29,6 @@ public:
     // Functions implementing STM32 Bootloader commands
     int8_t write_mem_word(uint32_t address, uint8_t* word_bytes, size_t len);
     int8_t read_mem_word(uint32_t address, uint8_t* rx_buf, size_t len);
-
+    int8_t erase_mem(uint8_t bank, uint16_t* sectors, size_t len);
 };
 
