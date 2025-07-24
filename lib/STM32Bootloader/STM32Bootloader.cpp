@@ -106,3 +106,72 @@ int8_t STM32Bootloader::wait_ack(uint8_t* resp, uint32_t timeout_ms)
     }
     return -2;  // Overall timeout
 }
+
+// Write a single word (16 bytes). Uses No-Stretch Write Memory cmd (0x32)
+int8_t STM32Bootloader::write_mem_word(uint32_t address, uint8_t* word_bytes, size_t len)
+{
+    uint8_t resp = 0x00;
+    if (len != 16)
+    {
+        return -1;  // wrong size buffer
+    }
+
+    send_cmd(0x32);
+    if (wait_ack(&resp, 100) < 0)
+    {
+        return -2;  // cmd not acknowledge
+    }
+
+    send_address(address);
+    if (wait_ack(&resp, 100) < 0)
+    {
+        return -3;  // address not acknowledge
+    }
+
+    send_data(word_bytes, len);
+    if (wait_ack(&resp, 100) < 0)
+    {
+        return -4;  // data checksum not acknowledge
+    }
+
+    return 0;
+}
+
+// Read a single word (16 bytes). Uses Read Memory cmd (0x11)
+int8_t STM32Bootloader::read_mem_word(uint32_t address, uint8_t* rx_buf, size_t len)
+{
+    uint8_t resp = 0x00;
+    if (len != 16)
+    {
+        return -1;  // wrong size buffer
+    }
+
+    send_cmd(0x11);
+    if (wait_ack(&resp, 100) < 0)
+    {
+        return -2;  // cmd not acknowledge
+    }
+
+    send_address(address);
+    if (wait_ack(&resp, 100) < 0)
+    {
+        return -3;  // address not acknowledge
+    }
+
+    _tx_buf[0] = len -1;    // N-1
+    _tx_buf[1] = ~_tx_buf[0];
+    send_frame(_tx_buf, 2);
+    if (wait_ack(&resp, 100) < 0)
+    {
+        return -4;  // read count checksum not acknowledge
+    }
+
+    I2C.requestFrom(_I2C_addr, len);
+    resp = I2C.readBytes(rx_buf, len);
+    if (resp != len)
+    {
+        return -5;  // we did not read enough bytes
+    }
+
+    return 0;
+}

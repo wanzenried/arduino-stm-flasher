@@ -24,8 +24,11 @@ public:
     int8_t send_cmd(uint8_t cmd);
     int8_t send_address(uint32_t address);
     int8_t send_data(uint8_t* data, size_t len);
-
     int8_t wait_ack(uint8_t* resp, uint32_t timeout_ms);
+
+    // Functions implementing STM32 Bootloader commands
+    int8_t write_mem_word(uint32_t address, uint8_t* word_bytes, size_t len);
+    int8_t read_mem_word(uint32_t address, uint8_t* rx_buf, size_t len);
 
 };
 
