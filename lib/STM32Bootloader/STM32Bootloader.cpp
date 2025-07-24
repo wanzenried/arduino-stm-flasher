@@ -1,7 +1,7 @@
 #include "STM32Bootloader.hpp"
 
-explicit STM32Bootloader::STM32Bootloader(I2C_Interface& I2C)
-    : I2C(I2C)
+explicit STM32Bootloader::STM32Bootloader(I2C_Interface& I2C, ITimer& timer)
+    : I2C(I2C), _timer(timer)
 {
 
 }
@@ -60,4 +60,49 @@ int8_t STM32Bootloader::send_data(uint8_t* data, size_t len)
     _tx_buf[len+1] = bytes_checksum(_tx_buf, len+1);
 
     return send_frame(_tx_buf, len+2);    
+}
+
+// wait for an ACK byte
+// returns 0 if immediate ACK
+// returns 1 if we have recieved at least one BUSY
+// returns -1 on NACK
+// returns -2 on timeout (should be long enough to allow large reads and writes)
+// otherwise -3 and response is saved in *resp
+int8_t STM32Bootloader::wait_ack(uint8_t* resp, uint32_t timeout_ms)
+{
+    bool saw_busy = false;
+    uint32_t start = _timer.millis();
+
+    while (_timer.millis() - start < timeout_ms)
+    {
+        // 1. Request 1 byte
+        I2C.requestFrom(_I2C_addr, 1);
+
+        // 2. wait for byte to arrive
+        uint32_t wait_start = _timer.millis();
+        while (I2C.available() == 0 && (_timer.millis() - wait_start < 10))
+        {
+            _timer.delay(1);
+        }
+
+        if (I2C.available() == 0)
+        {
+            continue;   // Try requesting a byte again
+        }
+
+        uint8_t res = (uint8_t)I2C.read();
+        *resp = res;
+
+        if (res == cfg::ACK) return saw_busy ? 1 : 0;
+        if (res == cfg::NACK) return -1;
+        if (res == cfg::BUSY)
+        {
+            saw_busy = true;
+            _timer.delay(5);    // Give the bus a little rest
+            continue;           // Request one more byte please
+        }
+        return -3;  // Unexpected byte
+        
+    }
+    return -2;  // Overall timeout
 }
