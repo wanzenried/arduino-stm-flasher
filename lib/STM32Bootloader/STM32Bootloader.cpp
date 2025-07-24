@@ -228,3 +228,23 @@ int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
     }
     return 0;
 }
+
+// Exit bootloader and jump to memory location. Uses Go cmd (0x21)
+int8_t STM32Bootloader::go(uint32_t address)
+{
+    uint8_t resp = 0x00;
+
+    send_cmd(0x21);
+    if (wait_ack(&resp, 100) < 0)
+    {
+        return -1;  // cmd not acknowledge
+    }
+
+    send_address(address);
+    if (wait_ack(&resp, 100) < 0)
+    {
+        return -2;  // address not acknowledge
+    }
+
+    return 0;
+}
