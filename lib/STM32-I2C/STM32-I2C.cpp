@@ -93,9 +93,9 @@ int8_t wait_ack(uint8_t addr, uint8_t *resp, unsigned long timeout_ms)
 
         res = i2c->read();
 
-        if (res == ACK) return saw_busy ? 1 : 0;
-        if (res == NACK) return -1;
-        if (res == BUSY) saw_busy = true;
+        if (res == cfg::ACK) return saw_busy ? 1 : 0;
+        if (res == cfg::NACK) return -1;
+        if (res == cfg::BUSY) saw_busy = true;
         else
         {
             *resp = res;

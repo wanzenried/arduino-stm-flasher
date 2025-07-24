@@ -2,14 +2,10 @@
 
 #include <Arduino.h>
 #include "I2C-Interface.hpp"
+#include "config.hpp"
 
 // This library implements I2C protocols to communicate with the STM32 bootloader as described in AN4221
 
-
-// Packet responses
-#define ACK     0x79
-#define NACK    0x1F
-#define BUSY    0x76
 
 void init_i2c_interface(I2C_Interface* interface);
 
