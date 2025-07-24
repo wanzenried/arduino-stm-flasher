@@ -44,7 +44,7 @@ flasher_interface::flasher_interface(UART_Interface& UART, uint8_t* buffer, uint
 
 }
 
-int16_t flasher_interface::recieve_command()
+int16_t flasher_interface::receive_command()
 {
     uint8_t rx_buf[2];
 

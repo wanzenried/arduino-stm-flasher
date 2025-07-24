@@ -46,7 +46,7 @@ private:
 public:
     flasher_interface(UART_Interface& UART, uint8_t* buffer, uint16_t size);
 
-    int16_t recieve_command();
+    int16_t receive_command();
     void command_selector(uint8_t cmd);
 
     // host commands

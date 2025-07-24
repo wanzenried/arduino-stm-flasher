@@ -19,7 +19,7 @@ void setup()
 
 void loop()
 {
-    cmd = interface.recieve_command();
+    cmd = interface.receive_command();
 
     if (cmd >= 0)
     {
