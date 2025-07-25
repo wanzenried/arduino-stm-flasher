@@ -26,12 +26,18 @@ uint8_t STM32Bootloader::bytes_checksum(uint8_t* bytes, size_t amount)
 int8_t STM32Bootloader::send_frame(uint8_t* tx_buf, size_t len)
 {
     if (len > MAX_I2C_FRAME)
-    {
-        return -1;  // too much data
-    }
-    I2C.beginTransmission(_I2C_addr);
-    I2C.writeBytes(tx_buf, len);
-    return I2C.endTransmission();
+        return STM32Error::WRONG_DATA_AMOUNT;
+
+    if (!I2C.beginTransmission(_I2C_addr))
+        return STM32Error::BEGIN_TRANSMISSION_FAIL;
+
+    if (I2C.writeBytes(tx_buf, len) != len)
+        return STM32Error::WRITE_ERROR;
+
+    if (!I2C.endTransmission())
+        return STM32Error::END_TRANSMISSION_FAIL;
+
+    return STM32Error::OK;
 }
 
 int8_t STM32Bootloader::send_cmd(uint8_t cmd)
@@ -55,9 +61,8 @@ int8_t STM32Bootloader::send_address(uint32_t address)
 int8_t STM32Bootloader::send_data(uint8_t* data, size_t len)
 {
     if (len > MAX_DATA_LEN)
-    {
-        return -1;  // too much data
-    }
+        return STM32Error::WRONG_DATA_AMOUNT;  // too much data
+
     _tx_buf[0] = uint8_t(len - 1);  // STM32 expects N+1 bytes
     for (size_t i = 0; i < len; i++)
     {
@@ -99,87 +104,91 @@ int8_t STM32Bootloader::wait_ack(uint8_t* resp, uint32_t timeout_ms)
         uint8_t res = (uint8_t)I2C.read();
         *resp = res;
 
-        if (res == cfg::ACK) return saw_busy ? 1 : 0;
-        if (res == cfg::NACK) return -1;
+        if (res == cfg::ACK) return saw_busy ? STM32Error::BUSY_ACK : STM32Error::OK;
+        if (res == cfg::NACK) return STM32Error::NACK;
         if (res == cfg::BUSY)
         {
             saw_busy = true;
             _timer.delay(5);    // Give the bus a little rest
             continue;           // Request one more byte please
         }
-        return -3;  // Unexpected byte
+        return STM32Error::UNEXPECTED_RESPONSE;
         
     }
-    return -2;  // Overall timeout
+    return STM32Error::TIMEOUT;
 }
 
 // Write a single word (16 bytes). Uses No-Stretch Write Memory cmd (0x32)
 int8_t STM32Bootloader::write_mem_word(uint32_t address, uint8_t* word_bytes, size_t len)
 {
     uint8_t resp = 0x00;
+    int8_t err = 0;
     if (len != WORD_LEN)
     {
-        return -1;  // wrong size buffer
+        return STM32Error::WRONG_DATA_AMOUNT;  // wrong size buffer
     }
 
-    send_cmd(STM32cmd::NS_WRITE_MEMORY);
+    err = send_cmd(STM32cmd::NS_WRITE_MEMORY);
+    if (err < 0)
+        return err;
+
     if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
-    {
-        return -2;  // cmd not acknowledge
-    }
+        return STM32Error::NACK;  // cmd not acknowledge
 
-    send_address(address);
+    err = send_address(address);
+    if (err < 0)
+        return err;
+
     if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
-    {
-        return -3;  // address not acknowledge
-    }
+        return STM32Error::NACK;  // address not acknowledge
 
-    send_data(word_bytes, len);
+    err = send_data(word_bytes, len);
+    if (err < 0)
+        return err;
+
     if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
-    {
-        return -4;  // data checksum not acknowledge
-    }
+        return STM32Error::NACK;  // data checksum not acknowledge
 
-    return 0;
+    return STM32Error::OK;
 }
 
 // Read a single word (16 bytes). Uses Read Memory cmd (0x11)
 int8_t STM32Bootloader::read_mem_word(uint32_t address, uint8_t* rx_buf, size_t len)
 {
     uint8_t resp = 0x00;
+    int8_t err = 0;
     if (len != WORD_LEN)
-    {
-        return -1;  // wrong size buffer
-    }
+        return STM32Error::WRONG_DATA_AMOUNT;  // wrong size buffer
 
-    send_cmd(STM32cmd::READ_MEMORY);
-    if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
-    {
-        return -2;  // cmd not acknowledge
-    }
+    err = send_cmd(STM32cmd::READ_MEMORY);
+    if (err < 0)
+        return err;
 
-    send_address(address);
     if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
-    {
-        return -3;  // address not acknowledge
-    }
+        return STM32Error::NACK;  // cmd not acknowledge
+
+    err = send_address(address);
+    if (err < 0)
+        return err;
+
+    if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
+        return STM32Error::NACK;  // address not acknowledge
 
     _tx_buf[0] = len -1;    // N-1
     _tx_buf[1] = ~_tx_buf[0];
-    send_frame(_tx_buf, 2);
+    err = send_frame(_tx_buf, 2);
+    if (err < 0)
+        return err;
+
     if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
-    {
-        return -4;  // read count checksum not acknowledge
-    }
+        return STM32Error::NACK;  // read count checksum not acknowledge
 
     I2C.requestFrom(_I2C_addr, len);
     resp = I2C.readBytes(rx_buf, len);
     if (resp != len)
-    {
-        return -5;  // we did not read enough bytes
-    }
+        return STM32Error::UNEXPECTED_RESPONSE;  // we did not read enough bytes
 
-    return 0;
+    return STM32Error::OK;
 }
 
 // Erase flash on STM. Uses No-Stretch Erase Memory cmd (0x45)
@@ -190,12 +199,14 @@ int8_t STM32Bootloader::read_mem_word(uint32_t address, uint8_t* rx_buf, size_t 
 int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
 {
     uint8_t resp = 0x00;
+    int8_t err = 0;
     
-    send_cmd(STM32cmd::NS_ERASE);
+    err = send_cmd(STM32cmd::NS_ERASE);
+    if (err < 0)
+        return err;
+
     if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
-    {
-        return -2;  // cmd not acknowledge
-    }
+        return STM32Error::NACK;  // cmd not acknowledge
 
     if (bank > 0xFC)
     {
@@ -205,52 +216,56 @@ int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
     else
     {
         if (len > 15 || len == 0)
-        {
-            return -1;  // wrong size buffer
-        }
+            return STM32Error::WRONG_DATA_AMOUNT;  // wrong size buffer
+
         _tx_buf[0] = 0x00;
         _tx_buf[1] = (uint8_t)len;
     }
     _tx_buf[2] = bytes_checksum(_tx_buf, 2);
-    send_frame(_tx_buf, 3);
+    err = send_frame(_tx_buf, 3);
+    if (err < 0)
+        return err;
     
     if (bank < 0xFD)
     {
         if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
-        {
-            return -3;  // sector count checksum not acknowledge
-        }
+            return STM32Error::NACK;  // sector count checksum not acknowledge
+
         for (size_t i = 0; i < len; i++)
         {
             _tx_buf[i*2] = (sectors[i] >> 8) & 0xFF;
             _tx_buf[(i*2)+1] = sectors[i] & 0xFF;
         }
         _tx_buf[2*len] = bytes_checksum(_tx_buf, 2*len);
-        send_frame(_tx_buf, (2*len)+1);
+        err = send_frame(_tx_buf, (2*len)+1);
+        if (err < 0)
+            return err;
     }
     if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
-    {
-        return -4;  // sector erase not acknowledge
-    }
-    return 0;
+        return STM32Error::NACK;  // sector erase not acknowledge
+
+    return STM32Error::OK;
 }
 
 // Exit bootloader and jump to memory location. Uses Go cmd (0x21)
 int8_t STM32Bootloader::go(uint32_t address)
 {
     uint8_t resp = 0x00;
+    int8_t err = 0;
 
-    send_cmd(STM32cmd::GO);
+    err = send_cmd(STM32cmd::GO);
+    if (err < 0)
+        return err;
+
     if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
-    {
-        return -1;  // cmd not acknowledge
-    }
+        return STM32Error::NACK;  // cmd not acknowledge
 
-    send_address(address);
+    err = send_address(address);
+    if (err < 0)
+        return err;
+
     if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
-    {
-        return -2;  // address not acknowledge
-    }
+        return STM32Error::NACK;  // address not acknowledge
 
-    return 0;
+    return STM32Error::OK;
 }

@@ -4,6 +4,7 @@
 #include "I2C-Interface.hpp"
 #include "Timer-Interface.hpp"
 #include "config.hpp"
+#include "STM32Bootloader-Errors.hpp"
 
 class STM32Bootloader
 {
