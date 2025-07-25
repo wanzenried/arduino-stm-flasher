@@ -116,7 +116,7 @@ int8_t STM32Bootloader::write_mem_word(uint32_t address, uint8_t* word_bytes, si
         return -1;  // wrong size buffer
     }
 
-    send_cmd(0x32);
+    send_cmd(STM32cmd::NS_WRITE_MEMORY);
     if (wait_ack(&resp, 100) < 0)
     {
         return -2;  // cmd not acknowledge
@@ -146,7 +146,7 @@ int8_t STM32Bootloader::read_mem_word(uint32_t address, uint8_t* rx_buf, size_t 
         return -1;  // wrong size buffer
     }
 
-    send_cmd(0x11);
+    send_cmd(STM32cmd::READ_MEMORY);
     if (wait_ack(&resp, 100) < 0)
     {
         return -2;  // cmd not acknowledge
@@ -185,7 +185,7 @@ int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
 {
     uint8_t resp = 0x00;
     
-    send_cmd(0x45);
+    send_cmd(STM32cmd::NS_ERASE);
     if (wait_ack(&resp, 100) < 0)
     {
         return -2;  // cmd not acknowledge
@@ -234,7 +234,7 @@ int8_t STM32Bootloader::go(uint32_t address)
 {
     uint8_t resp = 0x00;
 
-    send_cmd(0x21);
+    send_cmd(STM32cmd::GO);
     if (wait_ack(&resp, 100) < 0)
     {
         return -1;  // cmd not acknowledge
