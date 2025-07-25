@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "UART-Interface.hpp"
+#include "config.hpp"
 
 uint8_t cmd_checksum (uint8_t cmd);
 uint8_t bytes_checksum(uint8_t* bytes, size_t amount);

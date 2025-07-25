@@ -1,10 +1,12 @@
 #include <Arduino.h>
-#include <Wire.h>
 #include "I2C-Arduino.hpp"
-#include "STM32-I2C.hpp"
+#include "Timer-Arduino.hpp"
+#include "STM32Bootloader.hpp"
 #include "blink_binary.h"
 
 I2C_Arduino i2c(Wire);
+ArduinoTimer timer;
+STM32Bootloader loader(i2c, timer);
 
 const uint8_t stm_addr = 0x57;
 const uint32_t data_start_addr = 0x08000000;
@@ -16,7 +18,6 @@ void setup()
 {
     Serial.begin(115200);
     i2c.begin();
-    init_i2c_interface(&i2c);
 
     while(!Serial.available())
     {
@@ -24,7 +25,7 @@ void setup()
     }
 
     Serial.println("Clear all memory");
-    if(ns_erase_mem_all(stm_addr, 0)!=0)
+    if(loader.erase_mem(0xFF, nullptr, 0)!=0)
     {
         Serial.println("error");
         while(true){delay(10);}

@@ -1,9 +1,5 @@
 #include "flasher-interface.hpp"
 
-#define ACK 0x79
-#define NACK 0x1F
-#define BUSY 0x76
-
 // command checksum is just bitwise not of command
 // ex: cmd: 0xF0 -> checksum: 0x0F
 uint8_t cmd_checksum(uint8_t cmd)
@@ -56,7 +52,7 @@ int16_t flasher_interface::receive_command()
 
     if (rx_buf[0] != cmd_checksum(rx_buf[1]))
     {
-        UART.write(NACK);
+        UART.write(cfg::NACK);
         return -2;  // checksum mismatch
     }
     return rx_buf[0];
@@ -68,13 +64,13 @@ void flasher_interface::command_selector(uint8_t cmd)
     {
         if (cmd == command_table[i].cmd)
         {
-            UART.write(ACK);
+            UART.write(cfg::ACK);
             handle_command(i);
             return;
         }
         
     }
-    UART.write(NACK);   // cmd not found
+    UART.write(cfg::NACK);   // cmd not found
 }
 
 void flasher_interface::handle_command(uint8_t index)
@@ -135,31 +131,31 @@ void flasher_interface::write_buf()
 
     if (bytesRead != 3)
     {
-        UART.write(NACK);   // read timed out
+        UART.write(cfg::NACK);   // read timed out
         return;
     }
     if (bytes_checksum(rx_buf, 2) != rx_buf[2])
     {
-        UART.write(NACK);   // wrong checksum
+        UART.write(cfg::NACK);   // wrong checksum
         return;
     }
     buf_index = rx_buf[0] << 8;
     buf_index |= rx_buf[1];
 
-    // 2. is it in range? (ack/nack)
+    // 2. is it in range? (ACK/nack)
     if (buf_index >= buf_size)
     {
-        UART.write(NACK);   // out of bounds
+        UART.write(cfg::NACK);   // out of bounds
         return;
     }
-    UART.write(ACK);
+    UART.write(cfg::ACK);
 
     // 3. get amount of bytes to write (1 byte) + checksum (byte xor 0xFF)
     bytesRead = UART.readBytes(rx_buf, 2);
 
     if (bytesRead != 2)
     {
-        UART.write(NACK);   // read timed out
+        UART.write(cfg::NACK);   // read timed out
         return;
     }
 
@@ -167,7 +163,7 @@ void flasher_interface::write_buf()
     running_checksum(&checksum, rx_buf[0]);
     if (checksum != rx_buf[1])
     {
-        UART.write(NACK);   // wrong checksum
+        UART.write(cfg::NACK);   // wrong checksum
         return;
     }
     bytes_to_write = rx_buf[0] + 1;  // we want to write 1 - 256 bytes
@@ -177,16 +173,16 @@ void flasher_interface::write_buf()
 
     if (last_index >= buf_size || last_index < buf_index)
     {
-        UART.write(NACK);   // index out of bounds, or overflowed
+        UART.write(cfg::NACK);   // index out of bounds, or overflowed
         return;
     }
-    UART.write(ACK);
+    UART.write(cfg::ACK);
 
     // 5. read incoming bytes
     bytesRead = UART.readBytes(data_buf + buf_index, bytes_to_write);
     if (bytesRead != bytes_to_write)
     {
-        UART.write(NACK);   // we did not get the amount of bytes, we expected. Consider the sector you tried to write to corrupted
+        UART.write(cfg::NACK);   // we did not get the amount of bytes, we expected. Consider the sector you tried to write to corrupted
         return;
     }
 
@@ -194,7 +190,7 @@ void flasher_interface::write_buf()
     bytesRead = UART.readBytes(rx_buf, 1);
     if (bytesRead != 1)
     {
-        UART.write(NACK);   // checksum not recieved
+        UART.write(cfg::NACK);   // checksum not recieved
         return;
     }
 
@@ -202,11 +198,11 @@ void flasher_interface::write_buf()
     checksum = bytes_checksum(data_buf + buf_index, bytes_to_write);
     if (checksum != rx_buf[0])
     {
-        UART.write(NACK);   // wrong checksum
+        UART.write(cfg::NACK);   // wrong checksum
         return;
     }
 
-    UART.write(ACK);
+    UART.write(cfg::ACK);
 
 }
 
@@ -229,12 +225,12 @@ void flasher_interface::get_buf()
 
     if (bytesRead != 3)
     {
-        UART.write(NACK);   // read timed out
+        UART.write(cfg::NACK);   // read timed out
         return;
     }
     if (bytes_checksum(rx_buf, 2) != rx_buf[2])
     {
-        UART.write(NACK);   // wrong checksum
+        UART.write(cfg::NACK);   // wrong checksum
         return;
     }
     buf_index = rx_buf[0] << 8;
@@ -243,17 +239,17 @@ void flasher_interface::get_buf()
     // 2. is it in range? (ack/nack)
     if (buf_index >= buf_size)
     {
-        UART.write(NACK);   // out of bounds
+        UART.write(cfg::NACK);   // out of bounds
         return;
     }
-    UART.write(ACK);
+    UART.write(cfg::ACK);
     
     // 3. how many bytes to you want? (1 byte) + checksum (byte xor 0xFF)
     bytesRead = UART.readBytes(rx_buf, 2);
 
     if (bytesRead != 2)
     {
-        UART.write(NACK);   // read timed out
+        UART.write(cfg::NACK);   // read timed out
         return;
     }
 
@@ -261,7 +257,7 @@ void flasher_interface::get_buf()
     running_checksum(&checksum, rx_buf[0]);
     if (checksum != rx_buf[1])
     {
-        UART.write(NACK);   // wrong checksum
+        UART.write(cfg::NACK);   // wrong checksum
         return;
     }
     bytes_to_read = rx_buf[0] + 1;  // we want to read 1 - 256 bytes
@@ -271,10 +267,10 @@ void flasher_interface::get_buf()
 
     if (last_index >= buf_size || last_index < buf_index)
     {
-        UART.write(NACK);   // index out of bounds, or overflowed
+        UART.write(cfg::NACK);   // index out of bounds, or overflowed
         return;
     }
-    UART.write(ACK);
+    UART.write(cfg::ACK);
     
     // 5. Send bytes
     checksum = 0x00;
