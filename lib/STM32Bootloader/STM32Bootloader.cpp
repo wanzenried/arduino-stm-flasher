@@ -7,7 +7,7 @@ constexpr uint32_t ACK_TIMEOUT_MS = 200;
 
 
 STM32Bootloader::STM32Bootloader(I2C_Interface& I2C, ITimer& timer)
-    : I2C(I2C), _timer(timer)
+    : _I2C(I2C), _timer(timer)
 {
 
 }
@@ -28,13 +28,13 @@ int8_t STM32Bootloader::send_frame(uint8_t* tx_buf, size_t len)
     if (len > MAX_I2C_FRAME)
         return STM32Error::WRONG_DATA_AMOUNT;
 
-    if (!I2C.beginTransmission(_I2C_addr))
+    if (!_I2C.beginTransmission(_I2C_addr))
         return STM32Error::BEGIN_TRANSMISSION_FAIL;
 
-    if (I2C.writeBytes(tx_buf, len) != len)
+    if (_I2C.writeBytes(tx_buf, len) != len)
         return STM32Error::WRITE_ERROR;
 
-    if (!I2C.endTransmission())
+    if (!_I2C.endTransmission())
         return STM32Error::END_TRANSMISSION_FAIL;
 
     return STM32Error::OK;
@@ -42,19 +42,19 @@ int8_t STM32Bootloader::send_frame(uint8_t* tx_buf, size_t len)
 
 int8_t STM32Bootloader::send_cmd(uint8_t cmd)
 {
-    _tx_buf[0] = cmd;
-    _tx_buf[1] = ~cmd;
-    return send_frame(_tx_buf, 2);
+    _buf[0] = cmd;
+    _buf[1] = ~cmd;
+    return send_frame(_buf, 2);
 }
 
 int8_t STM32Bootloader::send_address(uint32_t address)
 {
-    _tx_buf[0] = (address >> 24) & 0xFF;
-    _tx_buf[1] = (address >> 16) & 0xFF;
-    _tx_buf[2] = (address >> 8) & 0xFF;
-    _tx_buf[3] = address & 0xFF;
-    _tx_buf[4] = bytes_checksum(_tx_buf, 4);
-    return send_frame(_tx_buf, 5);
+    _buf[0] = (address >> 24) & 0xFF;
+    _buf[1] = (address >> 16) & 0xFF;
+    _buf[2] = (address >> 8) & 0xFF;
+    _buf[3] = address & 0xFF;
+    _buf[4] = bytes_checksum(_buf, 4);
+    return send_frame(_buf, 5);
 }
 
 // len can be no more than 30 because of Wire.h restrictions [len + bytes + checksum]
@@ -63,14 +63,14 @@ int8_t STM32Bootloader::send_data(uint8_t* data, size_t len)
     if (len > MAX_DATA_LEN)
         return STM32Error::WRONG_DATA_AMOUNT;  // too much data
 
-    _tx_buf[0] = uint8_t(len - 1);  // STM32 expects N+1 bytes
+    _buf[0] = uint8_t(len - 1);  // STM32 expects N+1 bytes
     for (size_t i = 0; i < len; i++)
     {
-        _tx_buf[i+1] = data[i];
+        _buf[i+1] = data[i];
     }
-    _tx_buf[len+1] = bytes_checksum(_tx_buf, len+1);
+    _buf[len+1] = bytes_checksum(_buf, len+1);
 
-    return send_frame(_tx_buf, len+2);    
+    return send_frame(_buf, len+2);    
 }
 
 // wait for an ACK byte
@@ -87,21 +87,21 @@ int8_t STM32Bootloader::wait_ack(uint8_t* resp, uint32_t timeout_ms)
     while (_timer.millis() - start < timeout_ms)
     {
         // 1. Request 1 byte
-        I2C.requestFrom(_I2C_addr, 1);
+        _I2C.requestFrom(_I2C_addr, 1);
 
         // 2. wait for byte to arrive
         uint32_t wait_start = _timer.millis();
-        while (I2C.available() == 0 && (_timer.millis() - wait_start < 10))
+        while (_I2C.available() == 0 && (_timer.millis() - wait_start < 10))
         {
             _timer.delay(1);
         }
 
-        if (I2C.available() == 0)
+        if (_I2C.available() == 0)
         {
             continue;   // Try requesting a byte again
         }
 
-        uint8_t res = (uint8_t)I2C.read();
+        uint8_t res = (uint8_t)_I2C.read();
         *resp = res;
 
         if (res == cfg::ACK) return saw_busy ? STM32Error::BUSY_ACK : STM32Error::OK;
@@ -174,17 +174,17 @@ int8_t STM32Bootloader::read_mem_word(uint32_t address, uint8_t* rx_buf, size_t 
     if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
         return STM32Error::NACK;  // address not acknowledge
 
-    _tx_buf[0] = len -1;    // N-1
-    _tx_buf[1] = ~_tx_buf[0];
-    err = send_frame(_tx_buf, 2);
+    _buf[0] = len -1;    // N-1
+    _buf[1] = ~_buf[0];
+    err = send_frame(_buf, 2);
     if (err < 0)
         return err;
 
     if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
         return STM32Error::NACK;  // read count checksum not acknowledge
 
-    I2C.requestFrom(_I2C_addr, len);
-    resp = I2C.readBytes(rx_buf, len);
+    _I2C.requestFrom(_I2C_addr, len);
+    resp = _I2C.readBytes(rx_buf, len);
     if (resp != len)
         return STM32Error::UNEXPECTED_RESPONSE;  // we did not read enough bytes
 
@@ -210,19 +210,19 @@ int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
 
     if (bank > 0xFC)
     {
-        _tx_buf[0] = 0xFF;
-        _tx_buf[1] = bank;
+        _buf[0] = 0xFF;
+        _buf[1] = bank;
     }
     else
     {
         if (len > 15 || len == 0)
             return STM32Error::WRONG_DATA_AMOUNT;  // wrong size buffer
 
-        _tx_buf[0] = 0x00;
-        _tx_buf[1] = (uint8_t)len;
+        _buf[0] = 0x00;
+        _buf[1] = (uint8_t)len;
     }
-    _tx_buf[2] = bytes_checksum(_tx_buf, 2);
-    err = send_frame(_tx_buf, 3);
+    _buf[2] = bytes_checksum(_buf, 2);
+    err = send_frame(_buf, 3);
     if (err < 0)
         return err;
     
@@ -233,11 +233,11 @@ int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
 
         for (size_t i = 0; i < len; i++)
         {
-            _tx_buf[i*2] = (sectors[i] >> 8) & 0xFF;
-            _tx_buf[(i*2)+1] = sectors[i] & 0xFF;
+            _buf[i*2] = (sectors[i] >> 8) & 0xFF;
+            _buf[(i*2)+1] = sectors[i] & 0xFF;
         }
-        _tx_buf[2*len] = bytes_checksum(_tx_buf, 2*len);
-        err = send_frame(_tx_buf, (2*len)+1);
+        _buf[2*len] = bytes_checksum(_buf, 2*len);
+        err = send_frame(_buf, (2*len)+1);
         if (err < 0)
             return err;
     }

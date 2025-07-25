@@ -10,10 +10,10 @@
 class STM32Bootloader
 {
 private:
-    I2C_Interface& I2C;
+    I2C_Interface& _I2C;
     ITimer& _timer;
     uint8_t _I2C_addr = cfg::STM32_I2C_ADDR;
-    uint8_t _tx_buf[32];
+    uint8_t _buf[32];
 public:
     explicit STM32Bootloader(I2C_Interface& I2C, ITimer& timer);
 
