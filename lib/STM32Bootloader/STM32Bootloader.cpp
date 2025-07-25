@@ -1,6 +1,12 @@
 #include "STM32Bootloader.hpp"
 
-explicit STM32Bootloader::STM32Bootloader(I2C_Interface& I2C, ITimer& timer)
+constexpr size_t MAX_I2C_FRAME = 32;
+constexpr size_t MAX_DATA_LEN = 30;
+constexpr size_t WORD_LEN = 16;
+constexpr uint32_t ACK_TIMEOUT_MS = 200;
+
+
+STM32Bootloader::STM32Bootloader(I2C_Interface& I2C, ITimer& timer)
     : I2C(I2C), _timer(timer)
 {
 
@@ -19,11 +25,11 @@ uint8_t STM32Bootloader::bytes_checksum(uint8_t* bytes, size_t amount)
 // len can be no more than 32 because of Wire.h restrictions
 int8_t STM32Bootloader::send_frame(uint8_t* tx_buf, size_t len)
 {
-    if (len > 32)
+    if (len > MAX_I2C_FRAME)
     {
         return -1;  // too much data
     }
-    !I2C.beginTransmission(_I2C_addr);
+    I2C.beginTransmission(_I2C_addr);
     I2C.writeBytes(tx_buf, len);
     return I2C.endTransmission();
 }
@@ -48,7 +54,7 @@ int8_t STM32Bootloader::send_address(uint32_t address)
 // len can be no more than 30 because of Wire.h restrictions [len + bytes + checksum]
 int8_t STM32Bootloader::send_data(uint8_t* data, size_t len)
 {
-    if (len > 30)
+    if (len > MAX_DATA_LEN)
     {
         return -1;  // too much data
     }
@@ -111,25 +117,25 @@ int8_t STM32Bootloader::wait_ack(uint8_t* resp, uint32_t timeout_ms)
 int8_t STM32Bootloader::write_mem_word(uint32_t address, uint8_t* word_bytes, size_t len)
 {
     uint8_t resp = 0x00;
-    if (len != 16)
+    if (len != WORD_LEN)
     {
         return -1;  // wrong size buffer
     }
 
     send_cmd(STM32cmd::NS_WRITE_MEMORY);
-    if (wait_ack(&resp, 100) < 0)
+    if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
     {
         return -2;  // cmd not acknowledge
     }
 
     send_address(address);
-    if (wait_ack(&resp, 100) < 0)
+    if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
     {
         return -3;  // address not acknowledge
     }
 
     send_data(word_bytes, len);
-    if (wait_ack(&resp, 100) < 0)
+    if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
     {
         return -4;  // data checksum not acknowledge
     }
@@ -141,19 +147,19 @@ int8_t STM32Bootloader::write_mem_word(uint32_t address, uint8_t* word_bytes, si
 int8_t STM32Bootloader::read_mem_word(uint32_t address, uint8_t* rx_buf, size_t len)
 {
     uint8_t resp = 0x00;
-    if (len != 16)
+    if (len != WORD_LEN)
     {
         return -1;  // wrong size buffer
     }
 
     send_cmd(STM32cmd::READ_MEMORY);
-    if (wait_ack(&resp, 100) < 0)
+    if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
     {
         return -2;  // cmd not acknowledge
     }
 
     send_address(address);
-    if (wait_ack(&resp, 100) < 0)
+    if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
     {
         return -3;  // address not acknowledge
     }
@@ -161,7 +167,7 @@ int8_t STM32Bootloader::read_mem_word(uint32_t address, uint8_t* rx_buf, size_t 
     _tx_buf[0] = len -1;    // N-1
     _tx_buf[1] = ~_tx_buf[0];
     send_frame(_tx_buf, 2);
-    if (wait_ack(&resp, 100) < 0)
+    if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
     {
         return -4;  // read count checksum not acknowledge
     }
@@ -186,7 +192,7 @@ int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
     uint8_t resp = 0x00;
     
     send_cmd(STM32cmd::NS_ERASE);
-    if (wait_ack(&resp, 100) < 0)
+    if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
     {
         return -2;  // cmd not acknowledge
     }
@@ -210,7 +216,7 @@ int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
     
     if (bank < 0xFD)
     {
-        if (wait_ack(&resp, 100) < 0)
+        if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
         {
             return -3;  // sector count checksum not acknowledge
         }
@@ -222,7 +228,7 @@ int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
         _tx_buf[2*len] = bytes_checksum(_tx_buf, 2*len);
         send_frame(_tx_buf, (2*len)+1);
     }
-    if (wait_ack(&resp, 100) < 0)
+    if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
     {
         return -4;  // sector erase not acknowledge
     }
@@ -235,13 +241,13 @@ int8_t STM32Bootloader::go(uint32_t address)
     uint8_t resp = 0x00;
 
     send_cmd(STM32cmd::GO);
-    if (wait_ack(&resp, 100) < 0)
+    if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
     {
         return -1;  // cmd not acknowledge
     }
 
     send_address(address);
-    if (wait_ack(&resp, 100) < 0)
+    if (wait_ack(&resp, ACK_TIMEOUT_MS) < 0)
     {
         return -2;  // address not acknowledge
     }
