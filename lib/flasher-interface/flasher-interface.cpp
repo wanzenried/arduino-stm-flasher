@@ -175,7 +175,7 @@ void flasher_interface::write_buf()
 
     // 7. compare checksum (ack/nack)
     checksum = validation::bytes_checksum(data_buf + buf_index, bytes_to_write);
-    if (checksum != rx_buf[0])
+    if ((uint8_t)checksum != rx_buf[0])
     {
         UART.write(cfg::NACK);   // wrong checksum
         return;

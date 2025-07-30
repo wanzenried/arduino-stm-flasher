@@ -43,7 +43,7 @@ int8_t STM32Bootloader::send_address(uint32_t address)
     _buf[1] = (address >> 16) & 0xFF;
     _buf[2] = (address >> 8) & 0xFF;
     _buf[3] = address & 0xFF;
-    _buf[4] = validation::bytes_checksum(_buf, 4);
+    _buf[4] = (uint8_t)validation::bytes_checksum(_buf, 4);
     return send_frame(_buf, 5);
 }
 
@@ -58,7 +58,7 @@ int8_t STM32Bootloader::send_data(uint8_t* data, size_t len)
     {
         _buf[i+1] = data[i];
     }
-    _buf[len+1] = validation::bytes_checksum(_buf, len+1);
+    _buf[len+1] = (uint8_t)validation::bytes_checksum(_buf, len+1);
 
     return send_frame(_buf, len+2);    
 }
@@ -211,7 +211,7 @@ int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
         _buf[0] = 0x00;
         _buf[1] = (uint8_t)len;
     }
-    _buf[2] = validation::bytes_checksum(_buf, 2);
+    _buf[2] = (uint8_t)validation::bytes_checksum(_buf, 2);
     err = send_frame(_buf, 3);
     if (err < 0)
         return err;
@@ -226,7 +226,7 @@ int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
             _buf[i*2] = (sectors[i] >> 8) & 0xFF;
             _buf[(i*2)+1] = sectors[i] & 0xFF;
         }
-        _buf[2*len] = validation::bytes_checksum(_buf, 2*len);
+        _buf[2*len] = (uint8_t)validation::bytes_checksum(_buf, 2*len);
         err = send_frame(_buf, (2*len)+1);
         if (err < 0)
             return err;
