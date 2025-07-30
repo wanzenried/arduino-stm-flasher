@@ -37,10 +37,6 @@ private:
     static const command_entry command_table[];
     static constexpr uint8_t command_count = 6;  //! this will have to be updated manually
 
-    //versioning:
-    static constexpr uint8_t VERSION_MAJOR = 0;
-    static constexpr uint8_t VERSION_MINOR = 1;
-
     void handle_command(uint8_t index);
 
 

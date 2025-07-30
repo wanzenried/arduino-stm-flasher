@@ -4,6 +4,10 @@
 
 namespace cfg
 {
+    //versioning:
+    static constexpr uint8_t VERSION_MAJOR = 0;
+    static constexpr uint8_t VERSION_MINOR = 1;
+
     static constexpr uint8_t ACK = 0x79;
     static constexpr uint8_t NACK = 0x1F;
     static constexpr uint8_t BUSY = 0x76;

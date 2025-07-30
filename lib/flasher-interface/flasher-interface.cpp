@@ -82,8 +82,8 @@ void flasher_interface::handle_command(uint8_t index)
 
 void flasher_interface::get_version()
 {
-    UART.write(VERSION_MAJOR);
-    UART.write(VERSION_MINOR);
+    UART.write(cfg::VERSION_MAJOR);
+    UART.write(cfg::VERSION_MINOR);
 }
 
 // Return count of valid commands (1 byte), then list of commands
