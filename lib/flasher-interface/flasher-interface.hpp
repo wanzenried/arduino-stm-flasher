@@ -10,11 +10,7 @@
 
 #include "UART-Interface.hpp"
 #include "config.hpp"
-
-uint8_t cmd_checksum (uint8_t cmd);
-uint8_t bytes_checksum(uint8_t* bytes, size_t amount);
-void running_checksum(uint8_t* checksum, uint8_t byte);
-
+#include "validation.hpp"
 
 
 class flasher_interface

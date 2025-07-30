@@ -4,6 +4,7 @@
 #include "I2C-Interface.hpp"
 #include "Timer-Interface.hpp"
 #include "config.hpp"
+#include "validation.hpp"
 #include "STM32Bootloader-Errors.hpp"
 #include "STM32Bootloader-Cmds.hpp"
 
@@ -21,7 +22,6 @@ public:
     uint8_t get_I2C_addr() const {return _I2C_addr;}
 
     // helper functions
-    uint8_t bytes_checksum(uint8_t* bytes, size_t amount);
     int8_t send_frame(uint8_t *tx_buf, size_t len);
     int8_t send_cmd(uint8_t cmd);
     int8_t send_address(uint32_t address);
