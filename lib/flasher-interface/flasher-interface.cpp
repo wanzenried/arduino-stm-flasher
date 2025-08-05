@@ -1,26 +1,5 @@
 #include "flasher-interface.hpp"
 
-// command checksum is just bitwise not of command
-// ex: cmd: 0xF0 -> checksum: 0x0F
-uint8_t cmd_checksum(uint8_t cmd)
-{
-    return ~cmd;
-}
-
-uint8_t bytes_checksum(uint8_t* bytes, size_t amount)
-{
-    uint8_t sum = 0x00;
-    for (size_t i = 0; i < amount; i++)
-    {
-        sum ^= bytes[i];
-    }
-    return sum;
-}
-
-void running_checksum(uint8_t* checksum, uint8_t byte)
-{
-    *checksum ^= byte;
-}
 
 // Array of pointers to class functions and their "command"
 const flasher_interface::command_entry flasher_interface::command_table[] = {
@@ -50,7 +29,7 @@ int16_t flasher_interface::receive_command()
     }
     UART.readBytes(rx_buf, 2);
 
-    if (rx_buf[0] != cmd_checksum(rx_buf[1]))
+    if (rx_buf[0] != validation::cmd_checksum(rx_buf[1]))
     {
         UART.write(cfg::NACK);
         return -2;  // checksum mismatch
@@ -82,8 +61,8 @@ void flasher_interface::handle_command(uint8_t index)
 
 void flasher_interface::get_version()
 {
-    UART.write(VERSION_MAJOR);
-    UART.write(VERSION_MINOR);
+    UART.write(cfg::VERSION_MAJOR);
+    UART.write(cfg::VERSION_MINOR);
 }
 
 // Return count of valid commands (1 byte), then list of commands
@@ -134,7 +113,7 @@ void flasher_interface::write_buf()
         UART.write(cfg::NACK);   // read timed out
         return;
     }
-    if (bytes_checksum(rx_buf, 2) != rx_buf[2])
+    if (validation::bytes_checksum(rx_buf, 2) != rx_buf[2])
     {
         UART.write(cfg::NACK);   // wrong checksum
         return;
@@ -160,7 +139,7 @@ void flasher_interface::write_buf()
     }
 
     checksum = 0xFF;
-    running_checksum(&checksum, rx_buf[0]);
+    validation::running_checksum(&checksum, rx_buf[0]);
     if (checksum != rx_buf[1])
     {
         UART.write(cfg::NACK);   // wrong checksum
@@ -195,8 +174,8 @@ void flasher_interface::write_buf()
     }
 
     // 7. compare checksum (ack/nack)
-    checksum = bytes_checksum(data_buf + buf_index, bytes_to_write);
-    if (checksum != rx_buf[0])
+    checksum = validation::bytes_checksum(data_buf + buf_index, bytes_to_write);
+    if ((uint8_t)checksum != rx_buf[0])
     {
         UART.write(cfg::NACK);   // wrong checksum
         return;
@@ -228,7 +207,7 @@ void flasher_interface::get_buf()
         UART.write(cfg::NACK);   // read timed out
         return;
     }
-    if (bytes_checksum(rx_buf, 2) != rx_buf[2])
+    if (validation::bytes_checksum(rx_buf, 2) != rx_buf[2])
     {
         UART.write(cfg::NACK);   // wrong checksum
         return;
@@ -254,7 +233,7 @@ void flasher_interface::get_buf()
     }
 
     checksum = 0xFF;
-    running_checksum(&checksum, rx_buf[0]);
+    validation::running_checksum(&checksum, rx_buf[0]);
     if (checksum != rx_buf[1])
     {
         UART.write(cfg::NACK);   // wrong checksum
@@ -276,7 +255,7 @@ void flasher_interface::get_buf()
     checksum = 0x00;
     while (bytes_to_read > 0)
     {
-        running_checksum(&checksum, data_buf[buf_index]);
+        validation::running_checksum(&checksum, data_buf[buf_index]);
         UART.write(data_buf[buf_index]);
         buf_index++;
         bytes_to_read--;

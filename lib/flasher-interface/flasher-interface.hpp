@@ -10,11 +10,7 @@
 
 #include "UART-Interface.hpp"
 #include "config.hpp"
-
-uint8_t cmd_checksum (uint8_t cmd);
-uint8_t bytes_checksum(uint8_t* bytes, size_t amount);
-void running_checksum(uint8_t* checksum, uint8_t byte);
-
+#include "validation.hpp"
 
 
 class flasher_interface
@@ -36,10 +32,6 @@ private:
 
     static const command_entry command_table[];
     static constexpr uint8_t command_count = 6;  //! this will have to be updated manually
-
-    //versioning:
-    static constexpr uint8_t VERSION_MAJOR = 0;
-    static constexpr uint8_t VERSION_MINOR = 1;
 
     void handle_command(uint8_t index);
 

@@ -12,16 +12,6 @@ STM32Bootloader::STM32Bootloader(I2C_Interface& I2C, ITimer& timer)
 
 }
 
-uint8_t STM32Bootloader::bytes_checksum(uint8_t* bytes, size_t amount)
-{
-    uint8_t sum = 0x00;
-    for (size_t i = 0; i < amount; i++)
-    {
-        sum ^= bytes[i];
-    }
-    return sum;
-}
-
 // len can be no more than 32 because of Wire.h restrictions
 int8_t STM32Bootloader::send_frame(uint8_t* tx_buf, size_t len)
 {
@@ -43,7 +33,7 @@ int8_t STM32Bootloader::send_frame(uint8_t* tx_buf, size_t len)
 int8_t STM32Bootloader::send_cmd(uint8_t cmd)
 {
     _buf[0] = cmd;
-    _buf[1] = ~cmd;
+    _buf[1] = validation::cmd_checksum(cmd);
     return send_frame(_buf, 2);
 }
 
@@ -53,7 +43,7 @@ int8_t STM32Bootloader::send_address(uint32_t address)
     _buf[1] = (address >> 16) & 0xFF;
     _buf[2] = (address >> 8) & 0xFF;
     _buf[3] = address & 0xFF;
-    _buf[4] = bytes_checksum(_buf, 4);
+    _buf[4] = (uint8_t)validation::bytes_checksum(_buf, 4);
     return send_frame(_buf, 5);
 }
 
@@ -68,7 +58,7 @@ int8_t STM32Bootloader::send_data(uint8_t* data, size_t len)
     {
         _buf[i+1] = data[i];
     }
-    _buf[len+1] = bytes_checksum(_buf, len+1);
+    _buf[len+1] = (uint8_t)validation::bytes_checksum(_buf, len+1);
 
     return send_frame(_buf, len+2);    
 }
@@ -221,7 +211,7 @@ int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
         _buf[0] = 0x00;
         _buf[1] = (uint8_t)len;
     }
-    _buf[2] = bytes_checksum(_buf, 2);
+    _buf[2] = (uint8_t)validation::bytes_checksum(_buf, 2);
     err = send_frame(_buf, 3);
     if (err < 0)
         return err;
@@ -236,7 +226,7 @@ int8_t STM32Bootloader::erase_mem(uint8_t bank, uint16_t* sectors, size_t len)
             _buf[i*2] = (sectors[i] >> 8) & 0xFF;
             _buf[(i*2)+1] = sectors[i] & 0xFF;
         }
-        _buf[2*len] = bytes_checksum(_buf, 2*len);
+        _buf[2*len] = (uint8_t)validation::bytes_checksum(_buf, 2*len);
         err = send_frame(_buf, (2*len)+1);
         if (err < 0)
             return err;
