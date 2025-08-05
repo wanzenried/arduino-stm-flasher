@@ -34,5 +34,9 @@ int16_t validation::bytes_checksum(const uint8_t* bytes, size_t amount)
 
 void validation::running_checksum(uint8_t* checksum, uint8_t byte)
 {
+    if (checksum == nullptr)
+    {
+        return;
+    }
     *checksum ^= byte;
 }
