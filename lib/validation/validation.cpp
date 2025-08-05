@@ -20,7 +20,7 @@ int16_t validation::bytes_checksum(const uint8_t* bytes, size_t amount)
     }
     uint8_t sum = 0x00;
 
-    if (amount < 0)
+    if (amount == 0)
     {
         return sum;
     }
