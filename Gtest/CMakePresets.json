@@ -1,0 +1,46 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "Debug",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Debug",
+            "configurePreset": "Debug"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "run-unit-tests",
+            "configurePreset": "Debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "build-tests",
+            "steps": [
+                {"type": "configure", "name": "Debug"},
+                {"type": "build", "name": "Debug"}
+            ]
+        },
+        {
+            "name": "build-and-run-tests",
+            "steps": [
+                {"type": "configure", "name": "Debug"},
+                {"type": "build", "name": "Debug"},
+                {"type": "test", "name": "run-unit-tests"}
+            ]
+        }
+    ]
+}
