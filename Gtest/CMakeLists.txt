@@ -22,9 +22,9 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 # Detecting and including all tests
-file(GLOB_RECURSE TEST_SRCS ../lib/validation/*.cpp)
+file(GLOB_RECURSE TEST_SRCS ./tests/*.cpp)
 
-# Same scope of directories as the main project
+# Add header folders here
 include_directories(../lib/validation/)
 
 # Including Mocks and Fakes for the projects
@@ -33,8 +33,16 @@ include_directories(.)
 # Definition can be used in the code to enable testing of hardware coupled functions.
 add_definitions("-DUNIT_TESTING=1")
 
-add_executable(unit_tests ${TEST_SRCS})
-target_link_libraries(unit_tests GTest::gtest_main GTest::gmock)
+# Add files used in tests here
+add_executable(unit_tests
+        ${TEST_SRCS}
+        ../lib/validation/validation.cpp
+)
+
+target_link_libraries(unit_tests
+        GTest::gtest_main
+        GTest::gmock
+)
 
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
