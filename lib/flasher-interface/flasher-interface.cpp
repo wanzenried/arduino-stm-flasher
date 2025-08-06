@@ -8,13 +8,16 @@ const flasher_interface::command_entry flasher_interface::command_table[] = {
     {0x10, &flasher_interface::get_buf_size},
     {0x11, &flasher_interface::clear_buf},
     {0x12, &flasher_interface::write_buf},
-    {0x13, &flasher_interface::get_buf}
-
+    {0x13, &flasher_interface::get_buf},
+    {0x14, &flasher_interface::buf_to_stm_mem},
+    {0x15, &flasher_interface::stm_mem_to_buf},
+    {0x16, &flasher_interface::clear_stm_mem},
+    {0x17, &flasher_interface::jump_stm_addr}
 
 };
 
-flasher_interface::flasher_interface(UART_Interface& UART, uint8_t* buffer, uint16_t size)
-    : UART(UART), data_buf(buffer), buf_size(size)
+flasher_interface::flasher_interface(UART_Interface& UART, STM32Bootloader& bootloader, uint8_t* buffer, uint16_t size)
+    : UART(UART), bootloader(bootloader), data_buf(buffer), buf_size(size)
 {
 
 }
@@ -263,5 +266,25 @@ void flasher_interface::get_buf()
     
     // 6. Send checksum (xor of all bytes sent)
     UART.write(checksum);
+
+}
+
+void flasher_interface::buf_to_stm_mem()
+{
+
+}
+
+void flasher_interface::stm_mem_to_buf()
+{
+
+}
+
+void flasher_interface::clear_stm_mem()
+{
+
+}
+
+void flasher_interface::jump_stm_addr()
+{
 
 }

@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "STM32Bootloader.hpp"
 #include "UART-Interface.hpp"
 #include "config.hpp"
 #include "validation.hpp"
@@ -17,6 +18,7 @@ class flasher_interface
 {
 private:
     UART_Interface& UART;
+    STM32Bootloader& bootloader;
     uint8_t* data_buf;
     uint16_t buf_size;
 
@@ -31,13 +33,13 @@ private:
     };
 
     static const command_entry command_table[];
-    static constexpr uint8_t command_count = 6;  //! this will have to be updated manually
+    static constexpr uint8_t command_count = 10;  //! this will have to be updated manually
 
     void handle_command(uint8_t index);
 
 
 public:
-    flasher_interface(UART_Interface& UART, uint8_t* buffer, uint16_t size);
+    flasher_interface(UART_Interface& UART, STM32Bootloader& bootloader, uint8_t* buffer, uint16_t size);
 
     int16_t receive_command();
     void command_selector(uint8_t cmd);
@@ -50,6 +52,13 @@ public:
     void clear_buf();
     void write_buf();
     void get_buf();
+
+    // Interacting with the STM32
+
+    void buf_to_stm_mem();
+    void stm_mem_to_buf();
+    void clear_stm_mem();
+    void jump_stm_addr();
 
 };
 
