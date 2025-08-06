@@ -286,10 +286,94 @@ void flasher_interface::buf_to_stm_mem()
 
 }
 
-// Transfer N + 1 (2 byte number) bytes from STM32 memory to data_buf
-// 
+// Transfer N + 1 (1 byte) bytes from STM32 memory to data_buf
+// data_buf index: (2bytes HI LO)
+// STM32 data address (4 bytes MSB .. LSB)
 void flasher_interface::stm_mem_to_buf()
 {
+    uint8_t rx_buf[16];
+    uint16_t buf_index = 0;
+    uint16_t bytes_to_receive = 0;
+    uint32_t address = 0;
+
+
+    // 1. Recieve 2 byte data_buf index + checksum (XOR of bytes)
+    if (get_multi_arg(2, rx_buf) < 0)
+    {
+        UART.write(cfg::NACK);
+        return;
+    }
+
+    buf_index = (uint16_t)rx_buf[0] << 8;
+    buf_index |= rx_buf[1];
+
+    // 2. is it in range?
+    if (buf_index >= buf_size)
+    {
+        UART.write(cfg::NACK);   // out of bounds
+        return;
+    }
+    UART.write(cfg::ACK);
+
+    // 3. How many bytes do we want to recieve (1 byte) + checksum (byte XOR 0xFF)
+    if (get_single_arg(&rx_buf[0]) < 0)
+    {
+        UART.write(cfg::NACK);
+        return;
+    }
+    bytes_to_receive = rx_buf[0] + 1;
+
+    // 4. are all index in range?
+    uint16_t last_index = buf_index + bytes_to_receive;
+
+    if (last_index >= buf_size || last_index < buf_index)
+    {
+        UART.write(cfg::NACK);   // index out of bounds, or overflowed
+        return;
+    }
+    UART.write(cfg::ACK);
+
+    // 5. get STM32 data address (4 bytes) + checksum (XOR of bytes)
+    if (get_multi_arg(4, rx_buf) < 0)
+    {
+        UART.write(cfg::NACK);
+        return;
+    }
+
+    address |= (uint32_t)rx_buf[0] << 24;
+    address |= (uint32_t)rx_buf[1] << 16;
+    address |= (uint32_t)rx_buf[2] << 8;
+    address |= (uint32_t)rx_buf[3];
+
+    // 6. recieve data from STM32
+
+    uint16_t aligned_size = (bytes_to_receive + 15) & ~ 15; // Round up to nearest full chunk
+    uint16_t offset = 0;
+    uint8_t bytes_to_copy = 16;
+
+    while (offset < aligned_size)
+    {
+        if (bootloader.read_mem_word(address, rx_buf, 16) < STM32Error::OK)
+        {
+            UART.write(cfg::NACK);
+            return;
+        }
+
+        if (offset + 16 > bytes_to_receive)
+        {
+            bytes_to_copy = bytes_to_receive - offset;
+        }
+
+        for (uint8_t i = 0; i < bytes_to_copy; i++)
+        {
+            data_buf[buf_index + offset + i] = rx_buf[i];
+        }
+        
+        address += 16;
+        offset += 16;
+    }
+
+    UART.write(cfg::ACK);
 
 }
 
