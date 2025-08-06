@@ -215,7 +215,7 @@ void flasher_interface::get_buf()
         UART.write(cfg::NACK);   // wrong checksum
         return;
     }
-    buf_index = rx_buf[0] << 8;
+    buf_index |= (uint16_t)rx_buf[0] << 8;
     buf_index |= rx_buf[1];
 
     // 2. is it in range? (ack/nack)
@@ -274,6 +274,8 @@ void flasher_interface::buf_to_stm_mem()
 
 }
 
+// Transfer N + 1 (2 byte number) bytes from STM32 memory to data_buf
+// 
 void flasher_interface::stm_mem_to_buf()
 {
 
