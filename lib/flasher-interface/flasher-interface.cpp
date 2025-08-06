@@ -55,6 +55,67 @@ void flasher_interface::command_selector(uint8_t cmd)
     UART.write(cfg::NACK);   // cmd not found
 }
 
+// Recieve a single argument (1 byte) and its checksum (arg XOR 0xFF)
+// returns 0 if checksum matches, and arg is stored at *arg
+int8_t flasher_interface::get_single_arg(uint8_t* arg)
+{
+    size_t bytesRead;
+    uint8_t rx_buf[2];
+    uint8_t checksum = 0xFF;
+
+    bytesRead = UART.readBytes(rx_buf, 2);
+    if (bytesRead != 2)
+    {
+        //UART.write(cfg::NACK);   // read timed out
+        return -1;
+    }
+
+    validation::running_checksum(&checksum, rx_buf[0]);
+    if (checksum != rx_buf[1])
+    {
+        //UART.write(cfg::NACK);   // wrong checksum
+        return -2;
+    }
+
+    *arg = rx_buf[0];
+    return 0;
+}
+
+// Recieves multiple arguments (max of 256 bytes) and its checksum (XOR of bytes)
+// Count will be constrained to 256
+// Recieved arguments are stored in *args while function is running
+// returns 0 if checksum matches
+// If checksum does not match, consider data in *args corrupted
+int8_t flasher_interface::get_multi_arg(size_t count, uint8_t* args)
+{
+    if (count > 256)
+    {
+        count = 256;
+    }
+    size_t bytesRead;
+    uint8_t checksum;
+
+    // Read arguments
+    bytesRead = UART.readBytes(args, count );
+    if (bytesRead != count)
+    {
+        return -1;  // Read timed out
+    }
+
+    // Read checksum byte
+    bytesRead = UART.readBytes(&checksum, 1);
+    if (bytesRead != 1)
+    {
+        return -1;  // Read timed out
+    }
+
+    if(validation::bytes_checksum(args, count) != checksum)
+    {
+        return -2;  // Wrong checksum
+    }
+    return 0;
+}
+
 void flasher_interface::handle_command(uint8_t index)
 {
     if (index >= command_count) return;
@@ -104,24 +165,17 @@ void flasher_interface::write_buf()
 {
     uint8_t rx_buf[3];
     uint8_t checksum = 0x00;
-    size_t bytesRead;
     uint16_t buf_index = 0;
     uint16_t bytes_to_write = 0;
 
     // 1. get where to write to (2 bytes) + checksum (xor of bytes)
-    bytesRead = UART.readBytes(rx_buf, 3);
+    if (get_multi_arg(2, rx_buf) < 0)
+    {
+        UART.write(cfg::NACK);
+        return;
+    }
 
-    if (bytesRead != 3)
-    {
-        UART.write(cfg::NACK);   // read timed out
-        return;
-    }
-    if (validation::bytes_checksum(rx_buf, 2) != rx_buf[2])
-    {
-        UART.write(cfg::NACK);   // wrong checksum
-        return;
-    }
-    buf_index = rx_buf[0] << 8;
+    buf_index = (int16_t)rx_buf[0] << 8;
     buf_index |= rx_buf[1];
 
     // 2. is it in range? (ACK/nack)
@@ -133,21 +187,12 @@ void flasher_interface::write_buf()
     UART.write(cfg::ACK);
 
     // 3. get amount of bytes to write (1 byte) + checksum (byte xor 0xFF)
-    bytesRead = UART.readBytes(rx_buf, 2);
-
-    if (bytesRead != 2)
+    if (get_single_arg(&rx_buf[0]) < 0)
     {
-        UART.write(cfg::NACK);   // read timed out
+        UART.write(cfg::NACK);
         return;
     }
 
-    checksum = 0xFF;
-    validation::running_checksum(&checksum, rx_buf[0]);
-    if (checksum != rx_buf[1])
-    {
-        UART.write(cfg::NACK);   // wrong checksum
-        return;
-    }
     bytes_to_write = rx_buf[0] + 1;  // we want to write 1 - 256 bytes
 
     // 4. are they all in range? (ack/nack)
@@ -160,27 +205,10 @@ void flasher_interface::write_buf()
     }
     UART.write(cfg::ACK);
 
-    // 5. read incoming bytes
-    bytesRead = UART.readBytes(data_buf + buf_index, bytes_to_write);
-    if (bytesRead != bytes_to_write)
+    // 5. read incoming bytes (N + 1 bytes) + checksum (XOR of bytes)
+    if (get_multi_arg(bytes_to_write, (data_buf + buf_index)) < 0)
     {
-        UART.write(cfg::NACK);   // we did not get the amount of bytes, we expected. Consider the sector you tried to write to corrupted
-        return;
-    }
-
-    // 6. read incoming checksum byte
-    bytesRead = UART.readBytes(rx_buf, 1);
-    if (bytesRead != 1)
-    {
-        UART.write(cfg::NACK);   // checksum not recieved
-        return;
-    }
-
-    // 7. compare checksum (ack/nack)
-    checksum = validation::bytes_checksum(data_buf + buf_index, bytes_to_write);
-    if ((uint8_t)checksum != rx_buf[0])
-    {
-        UART.write(cfg::NACK);   // wrong checksum
+        UART.write(cfg::NACK);  // we did not get the amount of bytes, we expected. Consider the sector you tried to write to corrupted
         return;
     }
 
@@ -198,23 +226,16 @@ void flasher_interface::get_buf()
 {
     uint8_t rx_buf[3];
     uint8_t checksum = 0x00;
-    size_t bytesRead;
     uint16_t buf_index = 0;
     uint16_t bytes_to_read = 0;
 
     // 1. where do you want bytes from? (2 bytes) + checksum (xor of bytes)
-    bytesRead = UART.readBytes(rx_buf, 3);
+    if (get_multi_arg(2, rx_buf) < 0)
+    {
+        UART.write(cfg::NACK);
+        return;
+    }
 
-    if (bytesRead != 3)
-    {
-        UART.write(cfg::NACK);   // read timed out
-        return;
-    }
-    if (validation::bytes_checksum(rx_buf, 2) != rx_buf[2])
-    {
-        UART.write(cfg::NACK);   // wrong checksum
-        return;
-    }
     buf_index |= (uint16_t)rx_buf[0] << 8;
     buf_index |= rx_buf[1];
 
@@ -227,21 +248,12 @@ void flasher_interface::get_buf()
     UART.write(cfg::ACK);
     
     // 3. how many bytes to you want? (1 byte) + checksum (byte xor 0xFF)
-    bytesRead = UART.readBytes(rx_buf, 2);
-
-    if (bytesRead != 2)
+    if (get_single_arg(&rx_buf[0]) < 0)
     {
-        UART.write(cfg::NACK);   // read timed out
+        UART.write(cfg::NACK);
         return;
     }
 
-    checksum = 0xFF;
-    validation::running_checksum(&checksum, rx_buf[0]);
-    if (checksum != rx_buf[1])
-    {
-        UART.write(cfg::NACK);   // wrong checksum
-        return;
-    }
     bytes_to_read = rx_buf[0] + 1;  // we want to read 1 - 256 bytes
     
     // 4. are they all in range? (ack/nack)
@@ -299,22 +311,15 @@ void flasher_interface::jump_stm_addr()
 {
     uint8_t rx_buf[5];
     uint32_t address = 0;
-    size_t bytesRead;
     int8_t resp = 0x00;
 
     // 1. Recieve 4 byte address (MSB first, LSB last) + checksum (XOR of bytes)
-    bytesRead = UART.readBytes(rx_buf, 5);
+    if (get_multi_arg(4, rx_buf) < 0)
+    {
+        UART.write(cfg::NACK);
+        return;
+    }
 
-    if (bytesRead != 5)
-    {
-        UART.write(cfg::NACK);   // read timed out
-        return;
-    }
-    if (validation::bytes_checksum(rx_buf, 4) != rx_buf[4])
-    {
-        UART.write(cfg::NACK);   // wrong checksum
-        return;
-    }
     // 2. combine bytes into 32bit uint
     address |= (uint32_t)rx_buf[0] << 24;
     address |= (uint32_t)rx_buf[1] << 16;

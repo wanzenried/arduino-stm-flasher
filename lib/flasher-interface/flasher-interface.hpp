@@ -44,6 +44,9 @@ public:
     int16_t receive_command();
     void command_selector(uint8_t cmd);
 
+    int8_t get_single_arg(uint8_t* arg);
+    int8_t get_multi_arg(size_t count, uint8_t* args);
+
     // host commands
 
     void get_version();
