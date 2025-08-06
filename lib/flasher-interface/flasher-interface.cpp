@@ -164,7 +164,6 @@ void flasher_interface::clear_buf()
 void flasher_interface::write_buf()
 {
     uint8_t rx_buf[3];
-    uint8_t checksum = 0x00;
     uint16_t buf_index = 0;
     uint16_t bytes_to_write = 0;
 
@@ -281,9 +280,89 @@ void flasher_interface::get_buf()
 
 }
 
+// Transfer N + 1 (1 byte) bytes from data_buf to STM32 memory
+// Byte amount must be a multiple of 16 (1 STM32 word)
+// data_buf index: (2bytes HI LO)
+// STM32 data address (4 bytes MSB .. LSB)
 void flasher_interface::buf_to_stm_mem()
 {
+    uint8_t rx_buf[5];
+    uint16_t buf_index = 0;
+    uint16_t bytes_to_send = 0;
+    uint32_t address = 0;
 
+    // 1. Recieve 2 byte data_buf index + checksum (XOR of bytes)
+    if (get_multi_arg(2, rx_buf) < 0)
+    {
+        UART.write(cfg::NACK);
+        return;
+    }
+
+    buf_index = (uint16_t)rx_buf[0] << 8;
+    buf_index |= rx_buf[1];
+
+    // 2. is it in range?
+    if (buf_index >= buf_size)
+    {
+        UART.write(cfg::NACK);   // out of bounds
+        return;
+    }
+    UART.write(cfg::ACK);
+
+    // 3. How many bytes do we want to send (1 byte) + checksum (byte XOR 0xFF)
+    if (get_single_arg(&rx_buf[0]) < 0)
+    {
+        UART.write(cfg::NACK);
+        return;
+    }
+    bytes_to_send = rx_buf[0] + 1;
+
+    // 4. Is amount of bytes full chunks?
+    if (bytes_to_send % 16 != 0)
+    {
+        UART.write(cfg::NACK);
+        return;
+    }
+
+    // 5. are all index in range?
+    uint16_t last_index = buf_index + bytes_to_send;
+
+    if (last_index >= buf_size || last_index < buf_index)
+    {
+        UART.write(cfg::NACK);   // index out of bounds, or overflowed
+        return;
+    }
+    UART.write(cfg::ACK);
+
+    // 6. get STM32 data address (4 bytes) + checksum (XOR of bytes)
+    if (get_multi_arg(4, rx_buf) < 0)
+    {
+        UART.write(cfg::NACK);
+        return;
+    }
+
+    address |= (uint32_t)rx_buf[0] << 24;
+    address |= (uint32_t)rx_buf[1] << 16;
+    address |= (uint32_t)rx_buf[2] << 8;
+    address |= (uint32_t)rx_buf[3];
+
+    // 7. send data to STM32
+
+    uint16_t offset = 0;
+
+    while (offset < bytes_to_send)
+    {
+        if (bootloader.write_mem_word(address, data_buf + buf_index + offset, 16) < STM32Error::OK)
+        {
+            UART.write(cfg::NACK);
+            return;
+        }
+        offset += 16;
+        address += 16;
+    }
+
+    UART.write(cfg::ACK);
+    
 }
 
 // Transfer N + 1 (1 byte) bytes from STM32 memory to data_buf
