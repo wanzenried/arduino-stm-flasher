@@ -286,5 +286,39 @@ void flasher_interface::clear_stm_mem()
 
 void flasher_interface::jump_stm_addr()
 {
+    uint8_t rx_buf[5];
+    uint32_t address = 0;
+    size_t bytesRead;
+    int8_t resp = 0x00;
+
+    // 1. Recieve 4 byte address (MSB first, LSB last) + checksum (XOR of bytes)
+    bytesRead = UART.readBytes(rx_buf, 5);
+
+    if (bytesRead != 5)
+    {
+        UART.write(cfg::NACK);   // read timed out
+        return;
+    }
+    if (validation::bytes_checksum(rx_buf, 4) != rx_buf[4])
+    {
+        UART.write(cfg::NACK);   // wrong checksum
+        return;
+    }
+    // 2. combine bytes into 32bit uint
+    address |= (uint32_t)rx_buf[0] << 24;
+    address |= (uint32_t)rx_buf[1] << 16;
+    address |= (uint32_t)rx_buf[2] << 8;
+    address |= (uint32_t)rx_buf[3];
+
+    // 3. jump to address
+    resp = bootloader.go(address);
+    if (resp < STM32Error::OK)
+    {
+        UART.write(cfg::NACK);  // Jump failed
+        return;
+    }
+    
+    // 4. return ACK
+    UART.write(cfg::ACK);
 
 }
