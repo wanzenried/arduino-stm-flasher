@@ -279,11 +279,20 @@ void flasher_interface::stm_mem_to_buf()
 
 }
 
+// Clears all memory on the STM32 (Individual granular clearing will be implemented later.)
 void flasher_interface::clear_stm_mem()
 {
+    int8_t resp = bootloader.erase_mem(0xFF, 0x00, 0x00);
 
+    if (resp < STM32Error::OK)
+    {
+        UART.write(cfg::NACK);
+        return;
+    }
+    UART.write(cfg::ACK);
 }
 
+// Exits the bootloader and jumps to a 32 bit address on the STM32
 void flasher_interface::jump_stm_addr()
 {
     uint8_t rx_buf[5];
