@@ -8,10 +8,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Generic Timer interface
+	- Pure virtual interface
+	- Functions:
+		- `uint32_t millis()`
+		- `void delay(uint32 ms)`
+- Arduino specific Timer implementation
+	- Uses `Arduino.h`
+- Config file `config.hpp` with namespace `cfg`
+	- `VERSION_MAJOR` = 0
+	- `VERSION_MINOR` = 2
+- `flasher_interface` class
+	- Decodes UART communication and calls relevant `STM32Bootloader` functions  
+	Commands are sent over UART as 2 bytes (cmd + checksum)
+	- Host commands
+		- `void get_version()` - Return program version (major, minor)
+		- `void get_valid_commands()` - Return count of valid commands (1 byte), then list of commands
+		- `void get_buf_size()` - Return max length of arduino data buffer (2 bytes)
+		- `void clear_buf()` - Reset arduino data buffer to all 0xFF
+		- `void write_buf()` - Write N + 1 bytes to data_buf (max N = 255)
+		- `void get_buf()` - Get N + 1 bytes from data_buf (max N is 255)
+	- STM32 commands
+		- `void buf_to_stm_mem()` - Transfer N + 1 (1 byte) bytes from data_buf to STM32 memory
+		- `void stm_mem_to_buf()` - Transfer N + 1 (1 byte) bytes from STM32 memory to data_buf
+		- `void clear_stm_mem()` - Clears all memory on the STM32
+		- `void jump_stm_addr()` - Exits the bootloader and jumps to a 32 bit address on the STM32
+- `serial_flasher.cpp` program to handle UART -> arduino -> I2C -> STM32
+- `flasher.py` script to talk to arduino
+	- clear flash `flasher.py port clear`
+	- upload binary `flasher.py port flash infile`
+	- dump flash to file `flasher.py port dump outfile`
+- Basic unit testing framework using Gtest
+	- Added unit tests for validation functions
 
 ### Changed
 
+- STM32 I2C functions moved to `STM32Bootloader` class
+- Checksum functions moved to `validation` namespace in `validation.hpp`
+- UART interface class
+	- `bool begin(uint32_t baud)` - argument type changed to uint32_t
+	- `void setTimeout(uint32_t timeout)` - argument type changed to uint32_t
+	- `uint32_t getTimeout(void) const` - return type changed to uint32_t
+- Updated how to use in README
+
 ### Removed
+- Programs made unneccesary with the new flashing tools
+	- Arduino mega binary uploader (`main.cpp`)
+	- Arduino mega memory dumper (`mem_dump.cpp`)
+	- Arduino mega memory eraser (`clear_mem.cpp`)
+	- `bin_to_h.py`
+- Example binary (`blink_binary.h`)
 
 ## [0.1.0] - 2025-07-22
 
