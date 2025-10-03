@@ -163,11 +163,39 @@ def flash_binary(serial_port, baudrate, bin_path):
         if not jump_to_address(ser, STM_START_ADDR):
             print("[WARNING] Jump failed. You may need to reset STM32 manually.")
 
+def clear_flash(serial_port, baudrate):
+
+    print("[INFO] Clearing flash of device")
+
+    with serial.Serial(serial_port, baudrate, timeout=1) as ser:
+        time.sleep(2)  # Allow Arduino to reset
+
+        # Step 1: Clear STM32 memory
+        if not clear_stm_mem(ser):
+            return
+        
+        print("[SUCCESS] Flash cleared.")
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Flash binary to STM32 via Arduino")
+    parser = argparse.ArgumentParser(description="STM32 Flash Tool via Arduino")
+
     parser.add_argument("port", help="Serial port (e.g. COM3 or /dev/ttyUSB0)")
-    parser.add_argument("bin", help="Path to .bin file")
     parser.add_argument("--baud", type=int, default=19200, help="Baud rate (default: 19200)")
+
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # Flash new binary
+    flash_parser = subparsers.add_parser("flash", help="Flash a binary file")
+    flash_parser.add_argument("bin", help="Path to .bin file")
+
+    # Clear flash
+    clear_parser = subparsers.add_parser("clear", help="Clear the flash")
+
+
     args = parser.parse_args()
 
-    flash_binary(args.port, args.baud, args.bin)
+    if args.command == "flash":
+        flash_binary(args.port, args.baud, args.bin)
+    elif args.command == "clear":
+        clear_flash(args.port, args.baud)
