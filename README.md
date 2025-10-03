@@ -14,13 +14,26 @@ While doing this, i will hopefully become better at and/or learn about:
 ## How does it work?
 Well I'm glad you asked:
 
-1. Use the python script `bin_to_h.py` to convert any `.bin` file to a header file
-2. Edit the cpp file to use your new header file
-3. Flash the program to your arduino mega
-4. Connect the I2C line from the arduino to the STM32xx
-5. Reboot the STM32xx into system boot mode
-6. Run the arduino code
-7. Profit
+1. Compile `serial_flasher.cpp`
+2. Flash the program to your arduino mega
+3. Connect the I2C line from the arduino to the STM32xx
+4. Reboot the STM32xx into system boot mode
+5. Connect the arduino to your computer with usb
+6. Run `flasher.py` with the port of the arduino and your binary file
+7. Sit back, relax and watch as your STM32 is flashed in real time
+
+### Prerequisites
+To use the project, you need the following things (aside from the binary you want to flash to your STM32 obviously)
+
+#### Python
+Aside from a python (at least version 3.2) install, the following packages are needed:
+* pyserial
+```
+pip install pyserial
+```
+
+#### Platformio
+Platformio is used to build the arduino side of the project
 
 ### A tiny disclaimer
 This is a work in progress.  
