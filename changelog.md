@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+## [0.2.0] - 2025-10-04
+
+### Added
 - Generic Timer interface
 	- Pure virtual interface
 	- Functions:
