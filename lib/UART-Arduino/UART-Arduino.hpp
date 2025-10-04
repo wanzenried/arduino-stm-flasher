@@ -11,9 +11,9 @@ private:
 public:
     UART_Arduino(HardwareSerial& serial);
 
-    bool begin(uint64_t baud) override;
-    void setTimeout(uint64_t timeout) override;
-    uint64_t getTimeout(void) const override;
+    bool begin(uint32_t baud) override;
+    void setTimeout(uint32_t timeout) override;
+    uint32_t getTimeout(void) const override;
     bool write(uint8_t byte) override;
     size_t writeBytes(const uint8_t *bytes, size_t len) override;
     size_t available(void) override;
