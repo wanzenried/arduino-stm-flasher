@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Config file `config.hpp` with namespace `cfg`
 	- `VERSION_MAJOR` = 0
 	- `VERSION_MINOR` = 2
-- `flasher_interface` class
+- `flasher_interface` class (see [#2](https://github.com/wanzenried/arduino-stm-flasher/pull/2))
 	- Decodes UART communication and calls relevant `STM32Bootloader` functions  
 	Commands are sent over UART as 2 bytes (cmd + checksum)
 	- Host commands
@@ -35,20 +35,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 		- `void jump_stm_addr()` - Exits the bootloader and jumps to a 32 bit address on the STM32
 - `serial_flasher.cpp` program to handle UART -> arduino -> I2C -> STM32
 - `flasher.py` script to talk to arduino
-	- clear flash `flasher.py port clear`
+	- clear flash `flasher.py port clear` (see [#10](https://github.com/wanzenried/arduino-stm-flasher/pull/10))
 	- upload binary `flasher.py port flash infile`
-	- dump flash to file `flasher.py port dump outfile`
+	- dump flash to file `flasher.py port dump outfile` (see [#11](https://github.com/wanzenried/arduino-stm-flasher/pull/11))
 - Basic unit testing framework using Gtest
 	- Added unit tests for validation functions
 
 ### Changed
 
-- STM32 I2C functions moved to `STM32Bootloader` class
+- STM32 I2C functions moved to `STM32Bootloader` class (see [#4](https://github.com/wanzenried/arduino-stm-flasher/pull/4))
 - Checksum functions moved to `validation` namespace in `validation.hpp`
-- UART interface class
-	- `bool begin(uint32_t baud)` - argument type changed to uint32_t
-	- `void setTimeout(uint32_t timeout)` - argument type changed to uint32_t
-	- `uint32_t getTimeout(void) const` - return type changed to uint32_t
+- UART interface class types changed from uint64_t to uint32_t (see [#2](https://github.com/wanzenried/arduino-stm-flasher/pull/3))
 - Updated how to use in README
 
 ### Removed
