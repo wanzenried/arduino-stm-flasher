@@ -22,6 +22,19 @@ Well I'm glad you asked:
 6. Run `flasher.py` with the port of the arduino and your binary file
 7. Sit back, relax and watch as your STM32 is flashed in real time
 
+## How to compile
+
+```
+cmake --preset Mega -D ARDUINO_PORT={PORT}
+```
+replace {PORT} with whatever port your board is connected to
+
+
+```
+cmake --build --preset Mega -t upload-STM-flasher
+```
+This will invoke avrdude to upload the program to your board
+
 ### Prerequisites
 To use the project, you need the following things (aside from the binary you want to flash to your STM32 obviously)
 
@@ -32,10 +45,14 @@ Aside from a python (at least version 3.2) install, the following packages are n
 pip install pyserial
 ```
 
-#### Platformio
-Platformio is used to build the arduino side of the project
+#### CMake
+
+#### Arduino core
 
 ### A tiny disclaimer
+
+Some CMake files in `cmake/` are based on [Arduino-AVR-CMake](https://github.com/tttapa/Arduino-AVR-CMake) by tttapa, MIT licensed.
+
 This is a work in progress.  
 It has therefore only been tested on the STM32H7B0VBT.  
 My code is probably full of bugs
