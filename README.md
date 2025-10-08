@@ -240,7 +240,6 @@ If you're interested in that kinda stuff, it can be found right [here](changelog
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-* []()
 * [Arduino-AVR-CMake](https://github.com/tttapa/Arduino-AVR-CMake)
 * [othneildrew's README template](https://github.com/othneildrew/Best-README-Template)
 
