@@ -13,6 +13,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.2.1] - 2025-10-08
+
+### Added
+- CMake presets for arduino: Uno, Mega, Leonardo
+- Added roadmap to README
+
+### Changed
+- Reorganized file structure to distinguish hardware specific implementations (`/firmware`) and business logic (`/lib`)
+- Updated includes to reflect the new structure
+- Renamed `serial_flasher.cpp` to `main.cpp`
+- Migrated build system from PlatformIO to CMake with [Arduino-AVR-CMake](https://github.com/tttapa/Arduino-AVR-CMake). This is primarily to use the same system for building and testing code (see [#13](https://github.com/wanzenried/arduino-stm-flasher/pull/13))
+- Rewrote README to also include description on how the setup and use (see [#14](https://github.com/wanzenried/arduino-stm-flasher/pull/14))
+
+### Removed
+
 ## [0.2.0] - 2025-10-04
 
 ### Added
