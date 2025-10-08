@@ -1,0 +1,57 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "default",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}"
+        },
+        {
+            "name": "MinSizeRel",
+            "hidden": true,
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
+            }
+        },
+        {
+            "name": "Mega",
+            "inherits": "MinSizeRel",
+            "toolchainFile": "${sourceDir}/cmake/toolchain/mega.toolchain.cmake",
+            "cacheVariables": {
+                "ARDUINO_PORT": "/dev/ttyACM0"
+            }
+        },
+        {
+            "name": "Uno",
+            "inherits": "MinSizeRel",
+            "toolchainFile": "${sourceDir}/cmake/toolchain/uno.toolchain.cmake",
+            "cacheVariables": {
+                "ARDUINO_PORT": "/dev/ttyACM0"
+            }
+        },
+        {
+            "name": "Leonardo",
+            "inherits": "MinSizeRel",
+            "toolchainFile": "${sourceDir}/cmake/toolchain/leonardo.toolchain.cmake",
+            "cacheVariables": {
+                "ARDUINO_PORT": "/dev/ttyACM0"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Mega",
+            "configurePreset": "Mega"
+        },
+        {
+            "name": "Uno",
+            "configurePreset": "Uno"
+        },
+        {
+            "name": "Leonardo",
+            "configurePreset": "Leonardo"
+        }
+    ]
+}

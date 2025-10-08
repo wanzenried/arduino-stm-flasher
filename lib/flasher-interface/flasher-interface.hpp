@@ -8,10 +8,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "STM32Bootloader.hpp"
-#include "UART-Interface.hpp"
+#include "STM32Bootloader/STM32Bootloader.hpp"
+#include "interfaces/UART-Interface.hpp"
 #include "config.hpp"
-#include "validation.hpp"
+#include "validation/validation.hpp"
 
 
 class flasher_interface

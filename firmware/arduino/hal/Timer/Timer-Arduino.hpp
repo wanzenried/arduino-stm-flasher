@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Timer-Interface.hpp"
 #include <Arduino.h>
+#include "interfaces/Timer-Interface.hpp"
 
 class ArduinoTimer : public ITimer
 {

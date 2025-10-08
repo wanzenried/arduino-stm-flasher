@@ -1,12 +1,12 @@
 #pragma once
 
 #include <stdint.h>
-#include "I2C-Interface.hpp"
-#include "Timer-Interface.hpp"
+#include "interfaces/I2C-Interface.hpp"
+#include "interfaces/Timer-Interface.hpp"
 #include "config.hpp"
-#include "validation.hpp"
-#include "STM32Bootloader-Errors.hpp"
-#include "STM32Bootloader-Cmds.hpp"
+#include "validation/validation.hpp"
+#include "STM32Bootloader/STM32Bootloader-Errors.hpp"
+#include "STM32Bootloader/STM32Bootloader-Cmds.hpp"
 
 class STM32Bootloader
 {
