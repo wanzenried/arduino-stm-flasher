@@ -1,10 +1,11 @@
 #include <Arduino.h>
 
-#include "UART-Arduino.hpp"
-#include "I2C-Arduino.hpp"
-#include "Timer-Arduino.hpp"
-#include "STM32Bootloader.hpp"
-#include "flasher-interface.hpp"
+#include "hal/UART/UART-Arduino.hpp"
+#include "hal/I2C/I2C-Arduino.hpp"
+#include "hal/Timer/Timer-Arduino.hpp"
+#include "STM32Bootloader/STM32Bootloader.hpp"
+#include "flasher-interface/flasher-interface.hpp"
+
 
 uint8_t buffer[0x1000];
 uint16_t buf_len = 0x1000;
